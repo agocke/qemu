@@ -4832,10 +4832,19 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 
         case 6: /* vmxon */
         	/* Nikola: I don't really understand why case 6 of this instruction means VMXON */
-            if ((prefixes & PREFIX_REPZ) == 0)
+            if (((prefixes & PREFIX_REPZ) == 0) || (mod == 3))
                 goto illegal_op;
-            if (mod == 3)
-            	gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
+
+            if (s->vm86 || !s->pe )
+                goto illegal_op;
+#ifdef TARGET_X86_64
+            if (s-> lma && !s->code64)
+            	goto illegal_op;
+#endif
+            if (s->cpl > 0)
+                gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
+
+            gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
             gen_helper_vmxon();
             break;
 
@@ -6946,9 +6955,17 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         rm = modrm & 7;
         switch(op) {
         case 0: /* sgdt */
-            if (mod == 3) {
-            	// This is old code that needs to be updated
-            	//tcg_gen_helper_0_0(vmxoff);
+            if (mod == 3) { /* vmxoff */
+                if (s->vm86)
+                	goto illegal_op;
+#ifdef TARGET_X86_64
+                if (s->lma && !s->code64)
+                	goto illegal_op;
+#endif
+
+                if (s->cpl > 0)
+                    gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
+            	gen_helper_vmxoff();
                 break;
             }
             gen_svm_check_intercept(s, pc_start, SVM_EXIT_GDTR_READ);

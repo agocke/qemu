@@ -5347,7 +5347,7 @@ void helper_vmexit(uint32_t exit_code, uint64_t exit_info_1)
 
 
 #if defined(CONFIG_USER_ONLY)
-// FIXME
+// FIXME:
 //#error VMX breaks user mode emulation
 // I do not understand why we need this.
 void helper_vmxon(void)
@@ -5364,11 +5364,17 @@ void helper_vmxoff(void)
 
 void helper_vmxon(void)
 {
+	if ((env->cr[4] & CR4_VMXE_MASK) == 0)
+		raise_exception_err(EXCP06_ILLOP, 0);
+
     env->vmx.enabled = 1;
 }
 
 void helper_vmxoff(void)
 {
+	if (!env->vmx.enabled)
+		raise_exception_err(EXCP06_ILLOP, 0);
+
     env->vmx.enabled = 0;
 }
 

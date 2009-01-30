@@ -205,6 +205,7 @@
 #define CR4_OSFXSR_SHIFT 9
 #define CR4_OSFXSR_MASK (1 << CR4_OSFXSR_SHIFT)
 #define CR4_OSXMMEXCPT_MASK  (1 << 10)
+#define CR4_VMXE_MASK (1 << 13)
 
 #define DR6_BD          (1 << 13)
 #define DR6_BS          (1 << 14)
