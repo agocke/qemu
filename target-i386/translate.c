@@ -4825,28 +4825,17 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                 if (s->cc_op != CC_OP_DYNAMIC)
                     gen_op_set_cc_op(s->cc_op);
                 gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
-                //FIXME: rebase this call
-                //tcg_gen_helper_0_1(helper_cmpxchg8b, cpu_A0);
-                // DONE?
                 gen_helper_cmpxchg8b(cpu_A0);
             }
             s->cc_op = CC_OP_EFLAGS;
             break;
 
-        case 6:
+        case 6: /* vmxon */
+        	/* Nikola: I don't really understand why case 6 of this instruction means VMXON */
             if ((prefixes & PREFIX_REPZ) == 0)
                 goto illegal_op;
-/*
-			TODO: DELETE
-            gen_jmp_im(pc_start - s->cs_base);
-            if (s->cc_op != CC_OP_DYNAMIC)
-                gen_op_set_cc_op(s->cc_op);
-            gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
-            gen_helper_cmpxchg8b(cpu_A0);
-*/
-
-            //FIXME: rebase this call
-            // Done?
+            if (mod == 3)
+            	gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
             gen_helper_vmxon();
             break;
 
