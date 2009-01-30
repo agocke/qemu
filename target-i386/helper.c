@@ -832,11 +832,17 @@ void cpu_x86_update_cr3(CPUX86State *env, target_ulong new_cr3)
     }
 }
 
+void raise_exception(int exception_index);
+
 void cpu_x86_update_cr4(CPUX86State *env, uint32_t new_cr4)
 {
 #if defined(DEBUG_MMU)
     printf("CR4 update: CR4=%08x\n", (uint32_t)env->cr[4]);
 #endif
+
+    if (((new_cr4 && CR4_VMXE_MASK) == 0) && env->vmx.enabled)
+    	raise_exception(EXCP0D_GPF);
+
     if ((new_cr4 & (CR4_PGE_MASK | CR4_PAE_MASK | CR4_PSE_MASK)) !=
         (env->cr[4] & (CR4_PGE_MASK | CR4_PAE_MASK | CR4_PSE_MASK))) {
         tlb_flush(env, 1);
@@ -1345,8 +1351,6 @@ int check_hw_breakpoints(CPUState *env, int force_dr6_update)
 }
 
 static CPUDebugExcpHandler *prev_debug_excp_handler;
-
-void raise_exception(int exception_index);
 
 static void breakpoint_handler(CPUState *env)
 {

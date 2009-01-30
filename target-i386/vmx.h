@@ -24,10 +24,15 @@
 #ifndef VMX_H
 #define VMX_H
 
+#define NO_VMCS 0xffffffffffffffffL
+
+/* Part of the CPUX86State struct */
 typedef struct vmx_status {
-	int enabled;
+	int			 	enabled;
+	target_ulong	cur_vmcs;
 } vmx_status_t;
 
+/* Virtual MAchine Control Structure */
 typedef struct vmcs {
 }__attribute__((packed)) vmcs_t;
 

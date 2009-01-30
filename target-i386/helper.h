@@ -202,6 +202,10 @@ DEF_HELPER_2(movq, void, ptr, ptr)
 DEF_HELPER_0(vmxon, void)
 DEF_HELPER_0(vmxoff, void)
 
+DEF_HELPER_1(vmclear, void, tl)
+DEF_HELPER_1(vmptrld, void, tl)
+DEF_HELPER_1(vmptrst, tl, tl)
+
 #define SHIFT 0
 #include "ops_sse_header.h"
 #define SHIFT 1

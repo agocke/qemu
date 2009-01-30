@@ -4831,21 +4831,64 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             break;
 
         case 6: /* vmxon */
-        	/* Nikola: I don't really understand why case 6 of this instruction means VMXON */
-            if (((prefixes & PREFIX_REPZ) == 0) || (mod == 3))
-                goto illegal_op;
-
-            if (s->vm86 || !s->pe )
-                goto illegal_op;
+            if (prefixes & PREFIX_DATA) {
+                /* vmclear */
+                if ((mod == 3) || s->vm86 || !s->pe
 #ifdef TARGET_X86_64
-            if (s-> lma && !s->code64)
-            	goto illegal_op;
+                		|| (s->lma && !s->code64)
 #endif
+                		)
+                    goto illegal_op;
+                if (s->cpl > 0)
+                    gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
+
+                gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
+                gen_helper_vmclear(cpu_A0);
+
+            } else if (prefixes & PREFIX_REPZ) {
+                /* vmxon */
+                if ((mod == 3) || s->vm86 || !s->pe
+#ifdef TARGET_X86_64
+                		|| (s->lma && !s->code64)
+#endif
+                		)
+                    goto illegal_op;
+                if (s->cpl > 0)
+                    gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
+
+                gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
+                gen_helper_vmxon();
+            } else {
+                /* vmptrld */
+                if ((mod == 3) || s->vm86 || !s->pe
+#ifdef TARGET_X86_64
+                		|| (s->lma && !s->code64)
+#endif
+                		)
+                    goto illegal_op;
+                if (s->cpl > 0)
+                    gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
+
+                gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
+                gen_helper_vmptrld(cpu_A0);
+            }
+            break;
+
+        case 7:
+            /* vmptrst */
+            if ((mod == 3) || s->vm86 || !s->pe
+#ifdef TARGET_X86_64
+					|| (s->lma && !s->code64)
+#endif
+            		)
+            	goto illegal_op;
             if (s->cpl > 0)
                 gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
 
             gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
-            gen_helper_vmxon();
+            // FIXME: Problem with patch 5.
+            //gen_helper_vmptrst(cpu_A0);
+            gen_op_st_T0_A0(OT_QUAD + s->mem_index);
             break;
 
         default:

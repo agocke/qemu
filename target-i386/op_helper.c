@@ -5360,6 +5360,23 @@ void helper_vmxoff(void)
 	//Dummy function
 }
 
+void helper_vmclear(target_ulong ptr)
+{
+	//Dummy function
+}
+
+void helper_vmptrld(target_ulong ptr)
+{
+	// Dummy function
+}
+
+target_ulong helper_vmptrst(target_ulong ptr)
+{
+	// Dummy function
+	return 0;
+}
+
+
 #else
 
 void helper_vmxon(void)
@@ -5368,6 +5385,7 @@ void helper_vmxon(void)
 		raise_exception_err(EXCP06_ILLOP, 0);
 
     env->vmx.enabled = 1;
+    env->vmx.cur_vmcs = NO_VMCS;
 }
 
 void helper_vmxoff(void)
@@ -5377,6 +5395,34 @@ void helper_vmxoff(void)
 
     env->vmx.enabled = 0;
 }
+
+void helper_vmclear(target_ulong ptr)
+{
+    if (!env->vmx.enabled)
+        raise_exception_err(EXCP06_ILLOP, 0);
+
+    if (ptr == env->vmx.cur_vmcs)
+        env->vmx.cur_vmcs = NO_VMCS;
+}
+
+void helper_vmptrld(target_ulong ptr)
+{
+    if (!env->vmx.enabled)
+        raise_exception_err(EXCP06_ILLOP, 0);
+
+    /* TODO check */
+
+    env->vmx.cur_vmcs = ptr;
+}
+
+target_ulong helper_vmptrst(target_ulong ptr)
+{
+    if (!env->vmx.enabled)
+        raise_exception_err(EXCP06_ILLOP, 0);
+
+    return env->vmx.cur_vmcs;
+}
+
 
 #endif
 
