@@ -32,14 +32,14 @@
 
 //#define DEBUG_MMU
 
-static void add_flagname_to_bitmaps(char *flagname, uint32_t *features, 
-                                    uint32_t *ext_features, 
-                                    uint32_t *ext2_features, 
+static void add_flagname_to_bitmaps(char *flagname, uint32_t *features,
+                                    uint32_t *ext_features,
+                                    uint32_t *ext2_features,
                                     uint32_t *ext3_features)
 {
     int i;
     /* feature flags taken from "Intel Processor Identification and the CPUID
-     * Instruction" and AMD's "CPUID Specification". In cases of disagreement 
+     * Instruction" and AMD's "CPUID Specification". In cases of disagreement
      * about feature names, the Linux name is used. */
     static const char *feature_name[] = {
         "fpu", "vme", "de", "pse", "tsc", "msr", "pae", "mce",
@@ -66,22 +66,22 @@ static void add_flagname_to_bitmaps(char *flagname, uint32_t *features,
        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     };
 
-    for ( i = 0 ; i < 32 ; i++ ) 
+    for ( i = 0 ; i < 32 ; i++ )
         if (feature_name[i] && !strcmp (flagname, feature_name[i])) {
             *features |= 1 << i;
             return;
         }
-    for ( i = 0 ; i < 32 ; i++ ) 
+    for ( i = 0 ; i < 32 ; i++ )
         if (ext_feature_name[i] && !strcmp (flagname, ext_feature_name[i])) {
             *ext_features |= 1 << i;
             return;
         }
-    for ( i = 0 ; i < 32 ; i++ ) 
+    for ( i = 0 ; i < 32 ; i++ )
         if (ext2_feature_name[i] && !strcmp (flagname, ext2_feature_name[i])) {
             *ext2_features |= 1 << i;
             return;
         }
-    for ( i = 0 ; i < 32 ; i++ ) 
+    for ( i = 0 ; i < 32 ; i++ )
         if (ext3_feature_name[i] && !strcmp (flagname, ext3_feature_name[i])) {
             *ext3_features |= 1 << i;
             return;
@@ -123,13 +123,13 @@ static x86_def_t x86_defs[] = {
         .family = 6,
         .model = 2,
         .stepping = 3,
-        .features = PPRO_FEATURES | 
+        .features = PPRO_FEATURES |
         /* these features are needed for Win64 and aren't fully implemented */
             CPUID_MTRR | CPUID_CLFLUSH | CPUID_MCA |
         /* this feature is needed for Solaris and isn't fully implemented */
             CPUID_PSE36,
-        .ext_features = CPUID_EXT_SSE3,
-        .ext2_features = (PPRO_FEATURES & 0x0183F3FF) | 
+        .ext_features = CPUID_EXT_SSE3 | CPUID_EXT_VMX,
+        .ext2_features = (PPRO_FEATURES & 0x0183F3FF) |
             CPUID_EXT2_LM | CPUID_EXT2_SYSCALL | CPUID_EXT2_NX |
             CPUID_EXT2_3DNOW | CPUID_EXT2_3DNOWEXT,
         .ext3_features = CPUID_EXT3_SVM,
@@ -1171,7 +1171,7 @@ int cpu_x86_handle_mmu_fault(CPUX86State *env, target_ulong addr,
         error_code |= PG_ERROR_I_D_MASK;
     if (env->intercept_exceptions & (1 << EXCP0E_PAGE)) {
         /* cr2 is not modified in case of exceptions */
-        stq_phys(env->vm_vmcb + offsetof(struct vmcb, control.exit_info_2), 
+        stq_phys(env->vm_vmcb + offsetof(struct vmcb, control.exit_info_2),
                  addr);
     } else {
         env->cr[2] = addr;
@@ -1572,7 +1572,7 @@ void cpu_x86_cpuid(CPUX86State *env, uint32_t index,
         break;
     case 0x80000008:
         /* virtual & phys address size in low 2 bytes. */
-/* XXX: This value must match the one used in the MMU code. */ 
+/* XXX: This value must match the one used in the MMU code. */
         if (env->cpuid_ext2_features & CPUID_EXT2_LM) {
             /* 64 bit processor */
 #if defined(USE_KQEMU)

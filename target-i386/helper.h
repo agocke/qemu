@@ -198,6 +198,10 @@ DEF_HELPER_0(enter_mmx, void)
 DEF_HELPER_0(emms, void)
 DEF_HELPER_2(movq, void, ptr, ptr)
 
+/* VMX */
+DEF_HELPER_0(vmxon, void)
+DEF_HELPER_0(vmxoff, void)
+
 #define SHIFT 0
 #include "ops_sse_header.h"
 #define SHIFT 1
