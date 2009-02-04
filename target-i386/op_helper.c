@@ -5497,6 +5497,66 @@ void helper_vmexit(uint32_t exit_code, uint64_t exit_info_1)
     cpu_loop_exit();
 }
 
+target_ulong helper_vmread(target_ulong index)
+{
+    int i, field;
+    int code64 = env->hflags & HF_CS64_MASK;
+
+    if (!env->vmx.enabled)
+        raise_exception_err(EXCP06_ILLOP, 0);
+
+    if (env->vmx.cur_vmcs == NO_VMCS) {
+        /* TODO VMfail */
+        return 0;
+    }
+
+    for (i = 0; i < vmcs_max_field_index; i++) {
+        if (vmcs_field_index[i].index == index) {
+            field = vmcs_field_index[i].field;
+            goto found;
+        }
+    }
+
+    /* TODO VMfail */
+    return 0;
+
+found:
+    if (code64)
+        return ldq_phys(env->vmx.cur_vmcs + (8 * field));
+    else
+        return ldl_phys(env->vmx.cur_vmcs + (8 * field));
+}
+
+void helper_vmwrite(target_ulong index, target_ulong value)
+{
+    int i, field;
+    int code64 = env->hflags & HF_CS64_MASK;
+
+    if (!env->vmx.enabled)
+        raise_exception_err(EXCP06_ILLOP, 0);
+
+    if (env->vmx.cur_vmcs == NO_VMCS) {
+        /* TODO VMfail */
+        return;
+    }
+
+    for (i = 0; i < vmcs_max_field_index; i++) {
+        if (vmcs_field_index[i].index == index) {
+            field = vmcs_field_index[i].field;
+            goto found;
+        }
+    }
+
+    /* TODO VMfail */
+    return;
+
+found:
+    if (code64)
+        stq_phys(env->vmx.cur_vmcs + (8 * field), value);
+    else
+        stl_phys(env->vmx.cur_vmcs + (8 * field), value);
+}
+
 #endif
 
 

@@ -7451,6 +7451,50 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             gen_eob(s);
         }
         break;
+    case 0x178: /* vmread */
+        modrm = ldub_code(s->pc++);
+        mod = (modrm >> 6) & 3;
+        reg = ((modrm >> 3) & 7) | rex_r;
+        rm = (modrm & 7) | REX_B(s);
+        ot = CODE64(s) ? OT_QUAD : OT_LONG;
+
+        if (!s->pe || (s->lma && !s->code64))
+            goto illegal_op;
+        if (s->cpl > 0)
+            gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
+
+        gen_op_mov_reg_T0(OT_LONG, reg);
+        tcg_gen_helper_1_1(helper_vmread, cpu_T[0], cpu_T[0]);
+
+        if (mod != 3) {
+            gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
+            gen_op_st_T0_A0(ot + s->mem_index);
+        } else {
+            gen_op_mov_TN_reg(ot, 0, rm);
+        }
+        break;
+    case 0x179: /* vmwrite */
+        modrm = ldub_code(s->pc++);
+        mod = (modrm >> 6) & 3;
+        reg = ((modrm >> 3) & 7) | rex_r;
+        rm = (modrm & 7) | REX_B(s);
+        ot = CODE64(s) ? OT_QUAD : OT_LONG;
+
+        if (!s->pe || (s->lma && !s->code64))
+            goto illegal_op;
+        if (s->cpl > 0)
+            gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
+
+        if (mod != 3) {
+            gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
+            gen_op_ld_T0_A0(ot + s->mem_index);
+        } else {
+            gen_op_mov_reg_T0(ot, rm);
+        }
+
+        gen_op_mov_reg_T1(OT_LONG, reg);
+        tcg_gen_helper_0_2(helper_vmread, cpu_T[0], cpu_T[1]);
+        break;
     /* MMX/3DNow!/SSE/SSE2/SSE3/SSSE3/SSE4 support */
     case 0x1c3: /* MOVNTI reg, mem */
         if (!(s->cpuid_features & CPUID_SSE2))

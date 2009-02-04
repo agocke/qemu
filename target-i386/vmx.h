@@ -35,7 +35,7 @@ typedef struct vmx_status {
 /* Virtual MAchine Control Structure */
 enum vmcs_field {
 
-    guest_cr0,
+    guest_cr0 = 0,
     guest_cr3,
     guest_cr4,
 
