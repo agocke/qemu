@@ -205,7 +205,7 @@ DEF_HELPER_0(vmxoff, void)
 DEF_HELPER_1(vmclear, void, tl)
 DEF_HELPER_1(vmptrld, void, tl)
 DEF_HELPER_1(vmptrst, tl, tl)
-DEF_HELPER_1(vmwrite, void, tl, tl)
+DEF_HELPER_2(vmwrite, void, tl, tl)
 DEF_HELPER_1(vmread, tl, tl)
 
 #define SHIFT 0
