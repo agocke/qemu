@@ -4844,9 +4844,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 
                 gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
                 gen_op_ld_T0_A0(OT_QUAD + s->mem_index);
-                tcg_gen_helperN(helper_vmclear, 0,
-                        0,NULL,1,&cpu_T[0]);
-                gen_helper_vmclear(cpu_A0);
+                gen_helper_vmclear(cpu_T[0]);
 
             } else if (prefixes & PREFIX_REPZ) {
                 /* vmxon */
@@ -4873,10 +4871,8 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                     gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
 
                 gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
-                gen_helper_vmptrld(cpu_A0);
+                gen_helper_vmptrld(cpu_T[0]);
                 gen_op_ld_T0_A0(OT_QUAD + s->mem_index);
-                tcg_gen_helperN(helper_vmptrld,0,
-                        0,NULL,1,&cpu_T[0]);
             }
             break;
 
@@ -4894,8 +4890,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
             // FIXME: Problem with patch 5.
             //gen_helper_vmptrst(cpu_A0);
-            tcg_gen_helperN(helper_vmptrst,0,
-                    1,cpu_T[0],0,NULL);
+            gen_helper_vmptrst(cpu_T[0]); // Is this the same as what is meant in the patch?
             gen_op_st_T0_A0(OT_QUAD + s->mem_index);
             break;
 
