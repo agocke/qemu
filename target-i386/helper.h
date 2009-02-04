@@ -204,11 +204,7 @@ DEF_HELPER_0(vmxoff, void)
 
 DEF_HELPER_1(vmclear, void, tl)
 DEF_HELPER_1(vmptrld, void, tl)
-#if 0
-    DEF_HELPER_1(vmptrst, tl, tl)
-    I think that this is what was meant for the patch
-#endif
-DEF_HELPER_1(vmptrst, void, tl)
+DEF_HELPER_1(vmptrst, tl, tl)
 
 #define SHIFT 0
 #include "ops_sse_header.h"
