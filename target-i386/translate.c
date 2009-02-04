@@ -7451,6 +7451,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             gen_eob(s);
         }
         break;
+#ifdef TARGET_X86_64
     case 0x178: /* vmread */
         modrm = ldub_code(s->pc++);
         mod = (modrm >> 6) & 3;
@@ -7495,6 +7496,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         gen_op_mov_reg_T1(OT_LONG, reg);
         tcg_gen_helper_0_2(helper_vmread, cpu_T[0], cpu_T[1]);
         break;
+#endif
     /* MMX/3DNow!/SSE/SSE2/SSE3/SSSE3/SSE4 support */
     case 0x1c3: /* MOVNTI reg, mem */
         if (!(s->cpuid_features & CPUID_SSE2))
