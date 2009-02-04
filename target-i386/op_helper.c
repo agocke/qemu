@@ -105,6 +105,160 @@ static const CPU86_LDouble f15rk[7] =
     3.32192809488736234781L,  /*l2t*/
 };
 
+struct vmcs_field_index vmcs_field_index[vmcs_max_field_index] = {
+
+    /* 16 Bit */
+    { guest_es_sel,                 0x0800 },
+    { guest_cs_sel,                 0x0802 },
+    { guest_ss_sel,                 0x0804 },
+    { guest_ds_sel,                 0x0806 },
+    { guest_fs_sel,                 0x0808 },
+    { guest_gs_sel,                 0x080a },
+    { guest_ldtr_sel,               0x080c },
+    { guest_tr_sel,                 0x080e },
+
+    { host_es_sel,                  0x0c00 },
+    { host_cs_sel,                  0x0c02 },
+    { host_ss_sel,                  0x0c04 },
+    { host_ds_sel,                  0x0c06 },
+    { host_fs_sel,                  0x0c08 },
+    { host_gs_sel,                  0x0c0a },
+    { host_tr_sel,                  0x0c0c },
+
+    /* 64 Bit */
+    { io_bitmap_a,                  0x2000 },
+    { io_bitmap_b,                  0x2002 },
+    { vmexit_msr_store,             0x2006 },
+    { vmexit_msr_load,              0x2008 },
+    { vmentry_msr_load,             0x200a },
+    { executive_vmcs,               0x200c },
+    { tsc_offset,                   0x2010 },
+
+    { guest_physical,               0x2400 },
+
+    { guest_vmcs_link,              0x2800 },
+    { guest_ia32_debugctl,          0x2802 },
+    { guest_ia32_pat,               0x2804 },
+    { guest_ia32_efer,              0x2806 },
+    { guest_ia32_perf_global_ctrl,  0x2808 },
+    { guest_pdpte0,                 0x280a },
+    { guest_pdpte1,                 0x280c },
+    { guest_pdpte2,                 0x280e },
+    { guest_pdpte3,                 0x2810 },
+
+    { host_ia32_pat,                0x2c00 },
+    { host_ia32_efer,               0x2c02 },
+    { host_ia32_perf_global_ctrl,   0x2c04 },
+
+    /* 32 Bit */
+    { pin_vm_exec_ctl,              0x4000 },
+    { cpu_vm_exec_ctl,              0x4002 },
+    { exception_bitmap,             0x4004 },
+    { page_fault_error_code_mask,   0x4006 },
+    { page_fault_error_code_match,  0x4008 },
+    { cr3_target_count,             0x400a },
+    { vmexit_controls,              0x400c },
+    { vmexit_msr_store_cnt,         0x400e },
+    { vmexit_msr_load_cnt,          0x4010 },
+    { vmentry_controls,             0x4012 },
+    { vmentry_msr_load_cnt,         0x4014 },
+    { vmentry_intr_info,            0x4016 },
+    { vmentry_excp_error_code,      0x4018 },
+    { vmentry_instruction_len,      0x401a },
+
+    { vm_instruction_error,         0x4400 },
+    { exit_reason,                  0x4402 },
+    { vmexit_intr_info,             0x4404 },
+    { vmexit_intr_error_code,       0x4406 },
+    { idt_vectoring_info,           0x4408 },
+    { idt_vectoring_error,          0x440a },
+    { vmexit_instruction_len,       0x440c },
+    { vmexit_instruction_info,      0x440e },
+
+    { guest_cs_limit,               0x4800 },
+    { guest_ss_limit,               0x4802 },
+    { guest_ds_limit,               0x4804 },
+    { guest_es_limit,               0x4806 },
+    { guest_fs_limit,               0x4808 },
+    { guest_gs_limit,               0x480a },
+    { guest_ldtr_limit,             0x480c },
+    { guest_tr_limit,               0x480e },
+    { guest_gdtr_limit,             0x4810 },
+    { guest_idtr_limit,             0x4812 },
+
+    { guest_cs_access,              0x4814 },
+    { guest_ss_access,              0x4816 },
+    { guest_ds_access,              0x4818 },
+    { guest_es_access,              0x481a },
+    { guest_fs_access,              0x481c },
+    { guest_gs_access,              0x481e },
+    { guest_ldtr_access,            0x4820 },
+    { guest_tr_access,              0x4822 },
+
+    { guest_interruptibility,       0x4824 },
+    { guest_activity,               0x4826 },
+    { guest_smbase,                 0x4828 },
+    { guest_ia32_sysenter_cs,       0x482a },
+    { guest_preemtion_timer,        0x482e },
+
+    { host_ia32_sysenter_cs,        0x4c00 },
+
+    /* Natural width */
+    { cr0_guest_host_mask,          0x6000 },
+    { cr4_guest_host_mask,          0x6002 },
+    { cr0_read_shadow,              0x6004 },
+    { cr4_read_shadow,              0x6006 },
+    { cr3_target_0,                 0x6008 },
+    { cr3_target_1,                 0x600a },
+    { cr3_target_2,                 0x600c },
+    { cr3_target_3,                 0x600e },
+
+    { exit_qualification,           0x6400 },
+    { io_rcx,                       0x6402 },
+    { io_rsi,                       0x6404 },
+    { io_rdi,                       0x6406 },
+    { io_rip,                       0x6408 },
+    { guest_linear_addr,            0x640a },
+
+    { guest_cr0,                    0x6800 },
+    { guest_cr3,                    0x6802 },
+    { guest_cr4,                    0x6804 },
+
+    { guest_es_base,                0x6806 },
+    { guest_cs_base,                0x6808 },
+    { guest_ss_base,                0x680a },
+    { guest_ds_base,                0x680c },
+    { guest_fs_base,                0x680e },
+    { guest_gs_base,                0x6810 },
+    { guest_ldtr_base,              0x6812 },
+    { guest_tr_base,                0x6814 },
+    { guest_gdtr_base,              0x6816 },
+    { guest_idtr_base,              0x6818 },
+
+    { guest_dr7,                    0x681a },
+    { guest_rsp,                    0x681c },
+    { guest_rip,                    0x681e },
+    { guest_rflags,                 0x6820 },
+    { guest_pending_dbg_excp,       0x6822 },
+    { guest_ia32_sysenter_esp,      0x6824 },
+    { guest_ia32_sysenter_eip,      0x6826 },
+
+    { host_cr0,                     0x6c00 },
+    { host_cr3,                     0x6c02 },
+    { host_cr4,                     0x6c04 },
+    { host_fs_base,                 0x6c06 },
+    { host_gs_base,                 0x6c08 },
+    { host_tr_base,                 0x6c0a },
+    { host_gdtr_base,               0x6c0c },
+    { host_idtr_base,               0x6c0e },
+
+    { host_ia32_sysenter_esp,       0x6c10 },
+    { host_ia32_sysenter_eip,       0x6c12 },
+    { host_rsp,                     0x6c14 },
+    { host_rip,                     0x6c16 },
+
+};
+
 /* broken thread support */
 
 static spinlock_t global_cpu_lock = SPIN_LOCK_UNLOCKED;
