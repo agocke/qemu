@@ -7001,17 +7001,30 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         rm = modrm & 7;
         switch(op) {
         case 0: /* sgdt */
-            if (mod == 3) { /* vmxoff */
+            if (mod == 3) { 
+				/* These are VMX operations, check preconditions */
                 if (s->vm86)
                 	goto illegal_op;
 #ifdef TARGET_X86_64
                 if (s->lma && !s->code64)
                 	goto illegal_op;
 #endif
-
                 if (s->cpl > 0)
                     gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
-            	gen_helper_vmxoff();
+            	switch(rm) {
+				case 2: /* vmlaunch */
+                    tcg_gen_helper_0_1(helper_vmlaunch, tcg_const_i32(0));
+                    break;
+
+                case 3: /* vmresume */
+                    tcg_gen_helper_0_1(helper_vmlaunch, tcg_const_i32(1));
+                    break;
+
+                case 4: /* vmxoff */
+                    tcg_gen_helper_0_0(helper_vmxoff);
+                    break;
+                }
+
                 break;
             }
             gen_svm_check_intercept(s, pc_start, SVM_EXIT_GDTR_READ);
@@ -7466,7 +7479,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
             gen_op_st_T0_A0(ot + s->mem_index);
         } else {
-            gen_op_mov_TN_reg(ot, 0, rm);
+            gen_op_mov_reg_T0(ot, rm);
         }
         break;
     case 0x179: /* vmwrite */
@@ -7483,13 +7496,13 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 
         if (mod != 3) {
             gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
-            gen_op_ld_T0_A0(ot + s->mem_index);
+            gen_op_ld_T1_A0(ot + s->mem_index);
         } else {
-            gen_op_mov_reg_T0(ot, rm);
+            gen_op_mov_TN_reg(ot, 1, rm);
         }
 
-        gen_op_mov_reg_T1(OT_LONG, reg);
-        tcg_gen_helper_0_2(helper_vmread, cpu_T[0], cpu_T[1]);
+        gen_op_mov_TN_reg(ot, 0, reg);
+        tcg_gen_helper_0_2(helper_vmwrite, cpu_T[0], cpu_T[1]);
         break;
 #endif
     /* MMX/3DNow!/SSE/SSE2/SSE3/SSSE3/SSE4 support */

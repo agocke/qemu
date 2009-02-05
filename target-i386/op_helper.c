@@ -5500,7 +5500,6 @@ void helper_vmexit(uint32_t exit_code, uint64_t exit_info_1)
 target_ulong helper_vmread(target_ulong index)
 {
     int i, field;
-    int code64 = env->hflags & HF_CS64_MASK;
 
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
@@ -5521,10 +5520,7 @@ target_ulong helper_vmread(target_ulong index)
     return 0;
 
 found:
-    if (code64)
-        return ldq_phys(env->vmx.cur_vmcs + (8 * field));
-    else
-        return ldl_phys(env->vmx.cur_vmcs + (8 * field));
+	return vmcs_read(field);
 }
 
 void helper_vmwrite(target_ulong index, target_ulong value)
@@ -5551,11 +5547,33 @@ void helper_vmwrite(target_ulong index, target_ulong value)
     return;
 
 found:
-    if (code64)
-        stq_phys(env->vmx.cur_vmcs + (8 * field), value);
-    else
-        stl_phys(env->vmx.cur_vmcs + (8 * field), value);
+	vmcs_write(field, value);
 }
+
+void helper_vmlaunch(uint32_t resume)
+{
+    int ls;
+
+    if (!env->vmx.enabled)
+        raise_exception_err(EXCP06_ILLOP, 0);
+
+    if (env->vmx.cur_vmcs == NO_VMCS) {
+        /* TODO VMfail */
+        return;
+    }
+
+    ls = vmcs_read(launch_state);
+    if ((resume && ls != VMX_LS_LAUNCHED)
+        || (!resume && ls != VMX_LS_CLEAR)) {
+        /* TODO VMfail */
+        return;
+    }
+
+    vmcs_write(launch_state, VMX_LS_LAUNCHED);
+
+    env->vmx.in_non_root = 1;
+  }
+
 
 #endif
 
@@ -5593,6 +5611,18 @@ target_ulong helper_vmptrst(target_ulong ptr)
 
 #else
 
+
+static inline target_ulong vmcs_read(int field)
+{
+    return ldq_phys(env->vmx.cur_vmcs + (8 * field));
+}
+
+static inline void vmcs_write(int field, target_ulong value)
+{
+    stq_phys(env->vmx.cur_vmcs + (8 * field), value);
+}
+
+
 void helper_vmxon(void)
 {
 	if ((env->cr[4] & CR4_VMXE_MASK) == 0)
@@ -5612,11 +5642,19 @@ void helper_vmxoff(void)
 
 void helper_vmclear(target_ulong ptr)
 {
+    int i;
+
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
 
     if (ptr == env->vmx.cur_vmcs)
         env->vmx.cur_vmcs = NO_VMCS;
+
+    for (i = 0; i < sizeof(env->vmx.cur_vmcs); i++) {
+        vmcs_write(i, 0);
+    }
+
+    // TODO Initialize (at least revision and abort)
 }
 
 void helper_vmptrld(target_ulong ptr)
