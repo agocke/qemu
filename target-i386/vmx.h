@@ -25,7 +25,7 @@
 #define VMX_H
 
 #define VMCS_REVISION 0x00000000
-#define NO_VMCS 0xffffffffffffffffL
+#define NO_VMCS 0xffffffffffffffffLL
 
 /* Part of the CPUX86State struct */
 typedef struct vmx_status {

@@ -3285,7 +3285,7 @@ void helper_rdmsr(void)
     case MSR_IA32_VMX_BASIC:
         val = (uint64_t) VMCS_REVISION | (0x1000LL << 32) | (6LL << 50);
 #ifdef TARGET_I386
-        val |= (1 << 48);
+        val |= (uint64_t)(1LL << 48);
 #endif
         break;
     case MSR_IA32_VMX_PINBASED_CTLS:
