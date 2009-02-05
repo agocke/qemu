@@ -7013,15 +7013,15 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                     gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
             	switch(rm) {
 				case 2: /* vmlaunch */
-                    tcg_gen_helper_0_1(helper_vmlaunch, tcg_const_i32(0));
+                    gen_helper_vmlaunch(tcg_const_i32(0));
                     break;
 
                 case 3: /* vmresume */
-                    tcg_gen_helper_0_1(helper_vmlaunch, tcg_const_i32(1));
+                    gen_helper_vmlaunch(tcg_const_i32(1));
                     break;
 
                 case 4: /* vmxoff */
-                    tcg_gen_helper_0_0(helper_vmxoff);
+                    gen_helper_vmxoff();
                     break;
                 }
 
