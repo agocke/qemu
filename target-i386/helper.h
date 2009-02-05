@@ -201,9 +201,9 @@ DEF_HELPER_0(emms, void)
 DEF_HELPER_2(movq, void, ptr, ptr)
 
 /* VMX */
+
 DEF_HELPER_0(vmxon, void)
 DEF_HELPER_0(vmxoff, void)
-
 DEF_HELPER_1(vmclear, void, tl)
 DEF_HELPER_1(vmptrld, void, tl)
 DEF_HELPER_1(vmptrst, tl, tl)
