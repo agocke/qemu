@@ -192,7 +192,7 @@ DEF_HELPER_2(fxrstor, void, tl, int)
 DEF_HELPER_1(bsf, tl, tl)
 DEF_HELPER_1(bsr, tl, tl)
 
-DEF_HELPER(void, helper_vmlaunch, (uint32_t resume))
+DEF_HELPER_1(vmlaunch, void, tl)
 
 /* MMX/SSE */
 
