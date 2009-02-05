@@ -24,6 +24,7 @@
 #ifndef VMX_H
 #define VMX_H
 
+#define VMCS_REVISION 0x00000000
 #define NO_VMCS 0xffffffffffffffffL
 
 /* Part of the CPUX86State struct */
@@ -185,6 +186,9 @@ enum vmcs_field {
     io_rip,
     guest_linear_addr,
 
+    /* Private */
+    launch_state,
+
     vmcs_max_field_index
 
 };
@@ -196,11 +200,13 @@ struct vmcs_field_index {
 
 extern struct vmcs_field_index vmcs_field_index[vmcs_max_field_index];
 
+/*
 typedef struct vmcs {
     uint32_t    revision;
     uint32_t    abort;
     uint64_t    data[vmcs_max_field_index];
 } vmcs_t;
+*/
 
 
 #endif

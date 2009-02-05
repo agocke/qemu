@@ -3282,6 +3282,34 @@ void helper_rdmsr(void)
     case MSR_IA32_APICBASE:
         val = cpu_get_apic_base(env);
         break;
+    case MSR_IA32_VMX_BASIC:
+        val = (uint64_t) VMCS_REVISION | (0x1000LL << 32) | (6LL << 50);
+#ifdef TARGET_I386
+        val |= (1 << 48);
+#endif
+        break;
+    case MSR_IA32_VMX_PINBASED_CTLS:
+        val = 0xffffffff;
+        break;
+    case MSR_IA32_VMX_PROCBASED_CTLS:
+        val = 0
+            | (1 <<  3)
+            | (1 <<  7)
+            | (1 << 15)
+            | (1 << 16)
+            | (1 << 19)
+            | (1 << 20)
+            | (1 << 23)
+            | (1 << 25)
+            ;
+        val |= (val << 32);
+        break;
+    case MSR_IA32_VMX_EXIT_CTLS:
+        val = 0xffffffff;
+        break;
+    case MSR_IA32_VMX_ENTRY_CTLS:
+        val = 0xffffffff;
+        break;
     case MSR_EFER:
         val = env->efer;
         break;
