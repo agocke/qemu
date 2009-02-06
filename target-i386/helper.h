@@ -192,8 +192,6 @@ DEF_HELPER_2(fxrstor, void, tl, int)
 DEF_HELPER_1(bsf, tl, tl)
 DEF_HELPER_1(bsr, tl, tl)
 
-DEF_HELPER_1(vmlaunch, void, tl)
-
 /* MMX/SSE */
 
 DEF_HELPER_0(enter_mmx, void)
@@ -209,6 +207,8 @@ DEF_HELPER_1(vmptrld, void, tl)
 DEF_HELPER_1(vmptrst, tl, tl)
 DEF_HELPER_2(vmwrite, void, tl, tl)
 DEF_HELPER_1(vmread, tl, tl)
+
+DEF_HELPER_1(vmlaunch, void, i32)
 
 #define SHIFT 0
 #include "ops_sse_header.h"

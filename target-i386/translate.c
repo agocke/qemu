@@ -4830,7 +4830,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             s->cc_op = CC_OP_EFLAGS;
             break;
 
-        case 6: /* vmxon */
+        case 6:
             if (prefixes & PREFIX_DATA) {
                 /* vmclear */
                 if ((mod == 3) || s->vm86 || !s->pe
@@ -4876,6 +4876,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             }
             break;
 
+            // why is vmptrst here and the other vm things up there?
         case 7:
             /* vmptrst */
             if ((mod == 3) || s->vm86 || !s->pe
@@ -4888,9 +4889,12 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                 gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
 
             gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
-            // FIXME: Problem with patch 5.
-            //gen_helper_vmptrst(cpu_A0);
-            gen_helper_vmptrst(cpu_T[0]); // Is this the same as what is meant in the patch?
+
+            // we get the return value in this t0.
+            // we should do something with it.
+            TCGv t0;
+            t0 = tcg_temp_local_new();
+            gen_helper_vmptrst(cpu_T[0], t0);
             gen_op_st_T0_A0(OT_QUAD + s->mem_index);
             break;
 
@@ -7001,7 +7005,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         rm = modrm & 7;
         switch(op) {
         case 0: /* sgdt */
-            if (mod == 3) { 
+            if (mod == 3) {
 				/* These are VMX operations, check preconditions */
                 if (s->vm86)
                 	goto illegal_op;
@@ -7473,7 +7477,9 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
 
         gen_op_mov_reg_T0(OT_LONG, reg);
-        tcg_gen_helper_1_1(helper_vmread, cpu_T[0], cpu_T[0]);
+        // TODO: old code below is rebased on the line below. Delete after time
+        //tcg_gen_helper_1_1(helper_vmread, cpu_T[0], cpu_T[0]);
+        gen_helper_vmread(cpu_T[0], cpu_T[0]);
 
         if (mod != 3) {
             gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
@@ -7502,7 +7508,9 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         }
 
         gen_op_mov_TN_reg(ot, 0, reg);
-        tcg_gen_helper_0_2(helper_vmwrite, cpu_T[0], cpu_T[1]);
+        // TODO: old code re-based below. Delete this line after some time
+        //tcg_gen_helper_0_2(helper_vmwrite, cpu_T[0], cpu_T[1]);
+        gen_helper_vmwrite(cpu_T[0], cpu_T[1]);
         break;
 #endif
     /* MMX/3DNow!/SSE/SSE2/SSE3/SSSE3/SSE4 support */

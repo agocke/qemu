@@ -5525,84 +5525,6 @@ void helper_vmexit(uint32_t exit_code, uint64_t exit_info_1)
     cpu_loop_exit();
 }
 
-target_ulong helper_vmread(target_ulong index)
-{
-    int i, field;
-
-    if (!env->vmx.enabled)
-        raise_exception_err(EXCP06_ILLOP, 0);
-
-    if (env->vmx.cur_vmcs == NO_VMCS) {
-        /* TODO VMfail */
-        return 0;
-    }
-
-    for (i = 0; i < vmcs_max_field_index; i++) {
-        if (vmcs_field_index[i].index == index) {
-            field = vmcs_field_index[i].field;
-            goto found;
-        }
-    }
-
-    /* TODO VMfail */
-    return 0;
-
-found:
-	return vmcs_read(field);
-}
-
-void helper_vmwrite(target_ulong index, target_ulong value)
-{
-    int i, field;
-    int code64 = env->hflags & HF_CS64_MASK;
-
-    if (!env->vmx.enabled)
-        raise_exception_err(EXCP06_ILLOP, 0);
-
-    if (env->vmx.cur_vmcs == NO_VMCS) {
-        /* TODO VMfail */
-        return;
-    }
-
-    for (i = 0; i < vmcs_max_field_index; i++) {
-        if (vmcs_field_index[i].index == index) {
-            field = vmcs_field_index[i].field;
-            goto found;
-        }
-    }
-
-    /* TODO VMfail */
-    return;
-
-found:
-	vmcs_write(field, value);
-}
-
-void helper_vmlaunch(uint32_t resume)
-{
-    int ls;
-
-    if (!env->vmx.enabled)
-        raise_exception_err(EXCP06_ILLOP, 0);
-
-    if (env->vmx.cur_vmcs == NO_VMCS) {
-        /* TODO VMfail */
-        return;
-    }
-
-    ls = vmcs_read(launch_state);
-    if ((resume && ls != VMX_LS_LAUNCHED)
-        || (!resume && ls != VMX_LS_CLEAR)) {
-        /* TODO VMfail */
-        return;
-    }
-
-    vmcs_write(launch_state, VMX_LS_LAUNCHED);
-
-    env->vmx.in_non_root = 1;
-  }
-
-
 #endif
 
 
@@ -5637,9 +5559,27 @@ target_ulong helper_vmptrst(target_ulong ptr)
 }
 
 
+target_ulong helper_vmread(target_ulong index)
+{
+	// Dummy function
+	return 0;
+}
+
+void helper_vmwrite(target_ulong index, target_ulong value)
+{
+	// Dummy function
+}
+
+void helper_vmlaunch(uint32_t resume)
+{
+	// Dummy function
+}
+
+
 #else
 
 
+/* small helper function for VMX */
 static inline target_ulong vmcs_read(int field)
 {
     return ldq_phys(env->vmx.cur_vmcs + (8 * field));
@@ -5649,7 +5589,7 @@ static inline void vmcs_write(int field, target_ulong value)
 {
     stq_phys(env->vmx.cur_vmcs + (8 * field), value);
 }
-
+/* end */
 
 void helper_vmxon(void)
 {
@@ -5702,6 +5642,94 @@ target_ulong helper_vmptrst(target_ulong ptr)
 
     return env->vmx.cur_vmcs;
 }
+
+target_ulong helper_vmread(target_ulong index)
+{
+    int i, field;
+
+    if (!env->vmx.enabled)
+        raise_exception_err(EXCP06_ILLOP, 0);
+
+    if (env->vmx.cur_vmcs == NO_VMCS) {
+        /* TODO VMfail */
+        return 0;
+    }
+
+    for (i = 0; i < vmcs_max_field_index; i++) {
+        if (vmcs_field_index[i].index == index) {
+            field = vmcs_field_index[i].field;
+            goto found;
+        }
+    }
+
+    /* TODO VMfail */
+    return 0;
+
+found:
+	return vmcs_read(field);
+}
+
+void helper_vmwrite(target_ulong index, target_ulong value)
+{
+    int i, field;
+    int code64 = env->hflags & HF_CS64_MASK;
+
+    if (!env->vmx.enabled)
+        raise_exception_err(EXCP06_ILLOP, 0);
+
+    if (env->vmx.cur_vmcs == NO_VMCS) {
+        /* TODO VMfail */
+        return;
+    }
+    static inline target_ulong vmcs_read(int field)
+    {
+        return ldq_phys(env->vmx.cur_vmcs + (8 * field));
+    }
+
+    static inline void vmcs_write(int field, target_ulong value)
+    {
+        stq_phys(env->vmx.cur_vmcs + (8 * field), value);
+    }
+
+
+    for (i = 0; i < vmcs_max_field_index; i++) {
+        if (vmcs_field_index[i].index == index) {
+            field = vmcs_field_index[i].field;
+            goto found;
+        }
+    }
+
+    /* TODO VMfail */
+    return;
+
+found:
+	vmcs_write(field, value);
+}
+
+void helper_vmlaunch(uint32_t resume)
+{
+    int ls;
+
+    if (!env->vmx.enabled)
+        raise_exception_err(EXCP06_ILLOP, 0);
+
+    if (env->vmx.cur_vmcs == NO_VMCS) {
+        /* TODO VMfail */
+        return;
+    }
+
+    ls = vmcs_read(launch_state);
+    if ((resume && ls != VMX_LS_LAUNCHED)
+        || (!resume && ls != VMX_LS_CLEAR)) {
+        /* TODO VMfail */
+        return;
+    }
+
+    vmcs_write(launch_state, VMX_LS_LAUNCHED);
+
+    env->vmx.in_non_root = 1;
+}
+
 
 
 #endif

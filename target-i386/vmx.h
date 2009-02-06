@@ -30,9 +30,10 @@
 /* Part of the CPUX86State struct */
 typedef struct vmx_status {
 	int			 	enabled;
-	int				in_non_root;
-	uint64_t		cur_vmcs;
+	int             in_non_root;
+	target_ulong	cur_vmcs;
 } vmx_status_t;
+
 
 /* Launch state */
 enum {
@@ -40,13 +41,12 @@ enum {
     VMX_LS_LAUNCHED,
 };
 
-
 /* Virtual MAchine Control Structure */
 enum vmcs_field {
 
 	rev_abort = 0,
 
-    guest_cr0,
+	guest_cr0,
     guest_cr3,
     guest_cr4,
 
@@ -195,9 +195,6 @@ enum vmcs_field {
     io_rdi,
     io_rip,
     guest_linear_addr,
-
-    /* Private */
-    launch_state,
 
     /* Private */
     launch_state,
