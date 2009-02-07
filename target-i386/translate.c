@@ -4892,9 +4892,10 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 
             // we get the return value in this t0.
             // we should do something with it.
-            TCGv t0;
-            t0 = tcg_temp_local_new();
-            gen_helper_vmptrst(cpu_T[0], t0);
+            /* TCGv t0;
+             * t0 = tcg_temp_local_new();
+             */
+            gen_helper_vmptrst(cpu_T[0]);
             gen_op_st_T0_A0(OT_QUAD + s->mem_index);
             break;
 
