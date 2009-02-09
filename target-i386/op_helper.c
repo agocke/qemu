@@ -5552,10 +5552,9 @@ void helper_vmptrld(target_ulong ptr)
 	// Dummy function
 }
 
-target_ulong helper_vmptrst(target_ulong ptr)
+void helper_vmptrst(target_ulong ptr)
 {
 	// Dummy function
-	return 0;
 }
 
 
@@ -5635,12 +5634,16 @@ void helper_vmptrld(target_ulong ptr)
     env->vmx.cur_vmcs = ptr;
 }
 
-target_ulong helper_vmptrst(target_ulong ptr)
+/*
+ * "... the VMPTRST instruction stores the then current-VMCS
+ * pointer into a specified memory location
+ */
+void helper_vmptrst(target_ulong ptr)
 {
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
 
-    return env->vmx.cur_vmcs;
+    *((uint64_t*)ptr) = env->vmx.cur_vmcs;
 }
 
 target_ulong helper_vmread(target_ulong index)
