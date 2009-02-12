@@ -5708,7 +5708,7 @@ void helper_vmwrite(target_ulong index, target_ulong value)
         raise_exception_err(EXCP06_ILLOP, 0);
 
     if (env->vmx.cur_vmcs == NO_VMCS) {
-        /* TODO VMfail */
+        vm_fail_invalid();
         return;
     }
 
@@ -5720,10 +5720,11 @@ void helper_vmwrite(target_ulong index, target_ulong value)
         }
     }
 
-    /* TODO VMfail */
+    vm_fail_valid(VMRW_BAD_VMCS_COMP);
     return;
 
 found:
+    vm_succeed();
 	vmcs_write(field, value);
 }
 
