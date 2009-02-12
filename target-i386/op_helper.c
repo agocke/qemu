@@ -5552,7 +5552,7 @@ void helper_vmptrld(target_ulong ptr)
 	// Dummy function
 }
 
-target_ulong helper_vmptrst(target_ulong ptr)
+void helper_vmptrst(target_ulong ptr)
 {
 	// Dummy function
 	return 0;
@@ -5663,12 +5663,13 @@ void helper_vmptrld(target_ulong ptr)
     env->vmx.cur_vmcs = ptr;
 }
 
-target_ulong helper_vmptrst(target_ulong ptr)
+void helper_vmptrst(target_ulong ptr)
 {
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
 
-    return env->vmx.cur_vmcs;
+    // TODO: Implement ptr = env->vmx.cur_vmcs
+    ptr = env->vmx.cur_vmcs;
 }
 
 target_ulong helper_vmread(target_ulong index)
@@ -5709,15 +5710,6 @@ void helper_vmwrite(target_ulong index, target_ulong value)
     if (env->vmx.cur_vmcs == NO_VMCS) {
         /* TODO VMfail */
         return;
-    }
-    static inline target_ulong vmcs_read(int field)
-    {
-        return ldq_phys(env->vmx.cur_vmcs + (8 * field));
-    }
-
-    static inline void vmcs_write(int field, target_ulong value)
-    {
-        stq_phys(env->vmx.cur_vmcs + (8 * field), value);
     }
 
 
