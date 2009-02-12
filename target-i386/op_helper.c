@@ -5591,6 +5591,34 @@ static inline void vmcs_write(int field, target_ulong value)
 }
 /* end */
 
+static inline void vm_succeed(void)
+{
+    env->eflags &= ~(CC_C | CC_P | CC_A | CC_Z | CC_S | CC_O );
+}
+
+static inline void vm_fail_invalid(void)
+{
+    env->eflags &= ~(CC_P | CC_A | CC_Z | CC_S | CC_O );
+    env->eflags |= CC_C;
+}
+
+static inline void vm_fail_valid(uint32_t err)
+{
+    env->eflags &= ~(CC_C | CC_P | CC_A | CC_S | CC_O );
+    env->eflags |= CC_Z;
+    vmcs_write(vm_instruction_error, err);
+}
+
+static inline void vm_fail(uint32_t err)
+{
+    if(env->vmx.cur_vmcs == NO_VMCS){
+        vm_fail_invalid();
+    }
+    else {
+        vm_fail_valid(err);
+    }
+}
+
 void helper_vmxon(void)
 {
 	if ((env->cr[4] & CR4_VMXE_MASK) == 0)
