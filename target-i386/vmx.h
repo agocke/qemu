@@ -210,6 +210,32 @@ struct vmcs_field_index {
 
 extern struct vmcs_field_index vmcs_field_index[vmcs_max_field_index];
 
+/* See Intel Arch 3b Appendix J */
+enum vm_fail_error {
+    VMCALL_ROOT = 1,
+    VMCLEAR_INVALID,
+    VMCLEAR_VMXON,
+    VMLAUNCH_NC_VMCS,
+    VMRESUME_NL_VMCS,
+    VMRESUME_CORRUPT_VMCS,
+    VMENTRY_INVALID_CONTROL,
+    VMENTRY_INVALID_HOST_STATE,
+    VMPTRLD_INVALID_ADDR,
+    VMPTRLD_VMXON_PTR,
+    VMPTRLD_BAD_VMCS_REV,
+    VMRW_BAD_VMCS_COMP,
+    VMWRITE_RO_VMCS_COMP,
+    VMXON_VMX_ROOT_MODE,
+    VMENTRY_INVALID_VMCS,
+    VMENTRY_NL_VMCS,
+    VMENTRY_NOT_VMXON_PTR,
+    VMCALL_NON_CLEAR_VMCS,
+    VMCALL_INVALID_VMEXIT,
+    VOID,
+    VMCALL_BAD_MSEG
+};
+    
+
 /*
 typedef struct vmcs {
     uint32_t    revision;
