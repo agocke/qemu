@@ -5559,12 +5559,6 @@ target_ulong helper_vmptrst(target_ulong ptr)
 }
 
 
-target_ulong helper_vmread(target_ulong index)
-{
-	// Dummy function
-	return 0;
-}
-
 void helper_vmwrite(target_ulong index, target_ulong value)
 {
 	// Dummy function
