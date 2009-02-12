@@ -234,8 +234,55 @@ enum vm_fail_error {
     VOID,
     VMCALL_BAD_MSEG
 };
-    
 
+/* See Intel Arch 3b Appendix I */
+enum vm_exit_reasons {
+    EXCEP_OR_NMI_INT,
+    EXTERN_INT,
+    TRIPLE_FAULT,
+    INIT_SIG,
+    SIPI,
+    SMI_INT,
+    SMI_OTHER,
+    INT_WINDOW,
+    NMI_WINDOW,
+    TASK_SWITCH,
+    G_CPUID,
+    G_GETSEC,
+    G_HLT,
+    G_INVD,
+    G_INVLPG,
+    G_RDPMC,
+    G_RDTSC,
+    G_RSM,
+    G_SMM_VMCALL,
+    G_VMCLEAR,
+    G_VMLAUNCH,
+    G_VMPTRLD,
+    G_VMPTRST,
+    G_VMREAD,
+    G_VMRESUME,
+    G_VMWRITE,
+    G_VMXOFF,
+    G_VMXON,
+    G_CTL_REG,
+    G_MOV_DR1,
+    G_MOV_DR2,
+    G_IO,
+    G_RDMSR,
+    G_WRMSR,
+    VM_ENTRY_FAIL_GUEST_STATE,
+    VM_ENTRY_FAIL_MSR_LOAD,
+    G_MWAIT,
+    G_MONITOR,
+    G_PAUSE,
+    VM_ENTRY_FAIL_MACHINE_CHECK,
+    TPR_THRESH,
+    G_APIC,
+    G_WBINVD,
+    G_XSETBV
+};
+    
 /*
 typedef struct vmcs {
     uint32_t    revision;
