@@ -31,7 +31,7 @@
 typedef struct vmx_status {
 	int			 	enabled;
 	int             in_non_root;
-	target_ulong	cur_vmcs;
+	uint64_t    	cur_vmcs;
 } vmx_status_t;
 
 
