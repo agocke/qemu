@@ -7473,8 +7473,6 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
 
         gen_op_mov_reg_T0(OT_LONG, reg);
-        // TODO: old code below is rebased on the line below. Delete after time
-        //tcg_gen_helper_1_1(helper_vmread, cpu_T[0], cpu_T[0]);
         gen_helper_vmread(cpu_T[0], cpu_T[0]);
 
         if (mod != 3) {

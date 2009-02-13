@@ -210,6 +210,8 @@ DEF_HELPER_1(vmread, tl, tl)
 
 DEF_HELPER_1(vmlaunch, void, i32)
 
+/* VMX END */
+
 #define SHIFT 0
 #include "ops_sse_header.h"
 #define SHIFT 1

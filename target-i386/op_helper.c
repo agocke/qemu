@@ -5590,6 +5590,34 @@ static inline void vmcs_write(int field, target_ulong value)
 }
 /* end */
 
+static inline void vm_succeed(void)
+{
+    env->eflags &= ~(CC_C | CC_P | CC_A | CC_Z | CC_S | CC_O );
+}
+
+static inline void vm_fail_invalid(void)
+{
+    env->eflags &= ~(CC_P | CC_A | CC_Z | CC_S | CC_O );
+    env->eflags |= CC_C;
+}
+
+static inline void vm_fail_valid(uint32_t err)
+{
+    env->eflags &= ~(CC_C | CC_P | CC_A | CC_S | CC_O );
+    env->eflags |= CC_Z;
+    vmcs_write(vm_instruction_error, err);
+}
+
+static inline void vm_fail(uint32_t err)
+{
+    if(env->vmx.cur_vmcs == NO_VMCS){
+        vm_fail_invalid();
+    }
+    else {
+        vm_fail_valid(err);
+    }
+}
+
 void helper_vmxon(void)
 {
 	if ((env->cr[4] & CR4_VMXE_MASK) == 0)
@@ -5654,7 +5682,7 @@ target_ulong helper_vmread(target_ulong index)
         raise_exception_err(EXCP06_ILLOP, 0);
 
     if (env->vmx.cur_vmcs == NO_VMCS) {
-        /* TODO VMfail */
+        vm_fail_invalid();
         return 0;
     }
 
@@ -5665,11 +5693,12 @@ target_ulong helper_vmread(target_ulong index)
         }
     }
 
-    /* TODO VMfail */
+    vm_fail_valid(VMRW_BAD_VMCS_COMP);
     return 0;
 
 found:
-	return vmcs_read(field);
+    vm_succeed();
+    return vmcs_read(field);
 }
 
 void helper_vmwrite(target_ulong index, target_ulong value)
@@ -5681,17 +5710,8 @@ void helper_vmwrite(target_ulong index, target_ulong value)
         raise_exception_err(EXCP06_ILLOP, 0);
 
     if (env->vmx.cur_vmcs == NO_VMCS) {
-        /* TODO VMfail */
+        vm_fail_invalid();
         return;
-    }
-    static inline target_ulong vmcs_read(int field)
-    {
-        return ldq_phys(env->vmx.cur_vmcs + (8 * field));
-    }
-
-    static inline void vmcs_write(int field, target_ulong value)
-    {
-        stq_phys(env->vmx.cur_vmcs + (8 * field), value);
     }
 
 
@@ -5702,10 +5722,11 @@ void helper_vmwrite(target_ulong index, target_ulong value)
         }
     }
 
-    /* TODO VMfail */
+    vm_fail_valid(VMRW_BAD_VMCS_COMP);
     return;
 
 found:
+    vm_succeed();
 	vmcs_write(field, value);
 }
 

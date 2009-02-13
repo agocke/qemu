@@ -31,7 +31,7 @@
 typedef struct vmx_status {
 	int			 	enabled;
 	int             in_non_root;
-	target_ulong	cur_vmcs;
+	uint64_t    	cur_vmcs;
 } vmx_status_t;
 
 
@@ -210,6 +210,79 @@ struct vmcs_field_index {
 
 extern struct vmcs_field_index vmcs_field_index[vmcs_max_field_index];
 
+/* See Intel Arch 3b Appendix J */
+enum vm_fail_error {
+    VMCALL_ROOT = 1,
+    VMCLEAR_INVALID,
+    VMCLEAR_VMXON,
+    VMLAUNCH_NC_VMCS,
+    VMRESUME_NL_VMCS,
+    VMRESUME_CORRUPT_VMCS,
+    VMENTRY_INVALID_CONTROL,
+    VMENTRY_INVALID_HOST_STATE,
+    VMPTRLD_INVALID_ADDR,
+    VMPTRLD_VMXON_PTR,
+    VMPTRLD_BAD_VMCS_REV,
+    VMRW_BAD_VMCS_COMP,
+    VMWRITE_RO_VMCS_COMP,
+    VMXON_VMX_ROOT_MODE,
+    VMENTRY_INVALID_VMCS,
+    VMENTRY_NL_VMCS,
+    VMENTRY_NOT_VMXON_PTR,
+    VMCALL_NON_CLEAR_VMCS,
+    VMCALL_INVALID_VMEXIT,
+    VOID,
+    VMCALL_BAD_MSEG
+};
+
+/* See Intel Arch 3b Appendix I */
+enum vm_exit_reasons {
+    EXCEP_OR_NMI_INT,
+    EXTERN_INT,
+    TRIPLE_FAULT,
+    INIT_SIG,
+    SIPI,
+    SMI_INT,
+    SMI_OTHER,
+    INT_WINDOW,
+    NMI_WINDOW,
+    TASK_SWITCH,
+    G_CPUID,
+    G_GETSEC,
+    G_HLT,
+    G_INVD,
+    G_INVLPG,
+    G_RDPMC,
+    G_RDTSC,
+    G_RSM,
+    G_SMM_VMCALL,
+    G_VMCLEAR,
+    G_VMLAUNCH,
+    G_VMPTRLD,
+    G_VMPTRST,
+    G_VMREAD,
+    G_VMRESUME,
+    G_VMWRITE,
+    G_VMXOFF,
+    G_VMXON,
+    G_CTL_REG,
+    G_MOV_DR1,
+    G_MOV_DR2,
+    G_IO,
+    G_RDMSR,
+    G_WRMSR,
+    VM_ENTRY_FAIL_GUEST_STATE,
+    VM_ENTRY_FAIL_MSR_LOAD,
+    G_MWAIT,
+    G_MONITOR,
+    G_PAUSE,
+    VM_ENTRY_FAIL_MACHINE_CHECK,
+    TPR_THRESH,
+    G_APIC,
+    G_WBINVD,
+    G_XSETBV
+};
+    
 /*
 typedef struct vmcs {
     uint32_t    revision;
