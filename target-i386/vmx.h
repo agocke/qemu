@@ -225,14 +225,19 @@ enum vm_fail_error {
     VMPTRLD_BAD_VMCS_REV,
     VMRW_BAD_VMCS_COMP,
     VMWRITE_RO_VMCS_COMP,
+    VOID,
     VMXON_VMX_ROOT_MODE,
     VMENTRY_INVALID_VMCS,
     VMENTRY_NL_VMCS,
     VMENTRY_NOT_VMXON_PTR,
     VMCALL_NON_CLEAR_VMCS,
     VMCALL_INVALID_VMEXIT,
-    VOID,
-    VMCALL_BAD_MSEG
+    VOID2,
+    VMCALL_BAD_MSEG,
+    VMXOFF_UNDER_DUAL_SMI_AND_SMM,
+    VMCALL_INVALID_SMM_FEATURE,
+    VMENTRY_INVALID_VMCS_WHEN_RET_SMM,
+    VMENTRY_EVENTS_BLOCKED_BY_MOV_SS
 };
 
 /* See Intel Arch 3b Appendix I */
@@ -282,7 +287,7 @@ enum vm_exit_reasons {
     G_WBINVD,
     G_XSETBV
 };
-    
+
 /*
 typedef struct vmcs {
     uint32_t    revision;

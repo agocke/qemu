@@ -5618,6 +5618,10 @@ static inline void vm_fail(uint32_t err)
     }
 }
 
+void vm_exit(uint32_t reason) {
+	// TODO: Implement
+}
+
 void helper_vmxon(void)
 {
 	if ((env->cr[4] & CR4_VMXE_MASK) == 0)
@@ -5629,10 +5633,25 @@ void helper_vmxon(void)
 
 void helper_vmxoff(void)
 {
-	if (!env->vmx.enabled)
+	if (!env->vmx.enabled || env->eflags & VM_MASK
+			|| ((env->hflags & HF_LMA_MASK) && (env->segs[R_CS].limit == 0))) {
 		raise_exception_err(EXCP06_ILLOP, 0);
+	} else if (env->vmx.in_non_root) {
+		vm_exit(G_VMXOFF);
+	} else if (0) { // CPL > 0 ???
+		// #GP(0); ???
+	} else if (0) { // dual-monitor treatment of SMIs and SMM is active
+		vm_fail(VMXOFF_UNDER_DUAL_SMI_AND_SMM);
+	} else {
+		env->vmx.enabled = 0;
+		// unblock INIT
 
-    env->vmx.enabled = 0;
+		if (0) { // outside SMX operation
+			// unblock and enable A20M;
+		}
+		//clear address-range monitoring
+		vm_succeed();
+	}
 }
 
 void helper_vmclear(target_ulong ptr)
