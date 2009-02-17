@@ -27,6 +27,51 @@
 #define VMCS_REVISION 0x00000000
 #define NO_VMCS 0xffffffffffffffffLL
 
+/* See Intel Arch 3b Appendix I */
+#define EXCEP_OR_NMI_INT 0x00
+#define EXTERN_INT 0x01
+#define TRIPLE_FAULT 0x02
+#define INIT_SIGNAL 0x03
+#define STARTUP_IPI 0x04
+#define IO_SMI_INT 0x05
+#define SMI_OTHER 0x06
+#define INT_WINDOW 0x07
+#define NMI_WINDOW 0x08
+#define TASK_SWITCH 0x09
+#define G_CPUID 0x0a
+#define G_GETSEC 0x0b
+#define G_HLT 0x0c
+#define G_INVD 0x0d
+#define G_INVLPG 0x0e
+#define G_RDPMC 0x0f
+#define G_RDTSC 0x10
+#define G_RSM 0x11
+#define G_VMCALL 0x12
+#define G_VMCLEAR 0x13
+#define G_VMLAUNCH 0x14
+#define G_VMPTRLD 0x15
+#define G_VMPTRST 0x16
+#define G_VMREAD 0x17
+#define G_VMRESUME 0x18
+#define G_VMWRITE 0x19
+#define G_VMXOFF 0x1a
+#define G_VMXON 0x1b
+#define G_CTL_REG 0x1c
+#define G_MOV_DR 0x1d
+#define G_IO 0x1e
+#define G_RDMSR 0x1f
+#define G_WRMSR 0x20
+#define VM_ENTRY_FAIL_GUEST_STATE 0x21
+#define VM_ENTRY_FAIL_MSR_LOAD 0x22
+#define G_MWAIT 0x24
+#define G_MONITOR 0x27
+#define G_PAUSE 0x28
+#define VM_ENTRY_FAIL_MACHINE_CHECK 0x29
+#define TPR_THRESH 0x2b
+#define G_APIC 0x2c
+#define G_WBINVD 0x36
+#define G_XSETBV 0x37
+
 /* Part of the CPUX86State struct */
 typedef struct vmx_status {
 	int			 	enabled;
@@ -240,53 +285,7 @@ enum vm_fail_error {
     VMENTRY_EVENTS_BLOCKED_BY_MOV_SS
 };
 
-/* See Intel Arch 3b Appendix I */
-enum vm_exit_reasons {
-    EXCEP_OR_NMI_INT,
-    EXTERN_INT,
-    TRIPLE_FAULT,
-    INIT_SIG,
-    SIPI,
-    SMI_INT,
-    SMI_OTHER,
-    INT_WINDOW,
-    NMI_WINDOW,
-    TASK_SWITCH,
-    G_CPUID,
-    G_GETSEC,
-    G_HLT,
-    G_INVD,
-    G_INVLPG,
-    G_RDPMC,
-    G_RDTSC,
-    G_RSM,
-    G_SMM_VMCALL,
-    G_VMCLEAR,
-    G_VMLAUNCH,
-    G_VMPTRLD,
-    G_VMPTRST,
-    G_VMREAD,
-    G_VMRESUME,
-    G_VMWRITE,
-    G_VMXOFF,
-    G_VMXON,
-    G_CTL_REG,
-    G_MOV_DR1,
-    G_MOV_DR2,
-    G_IO,
-    G_RDMSR,
-    G_WRMSR,
-    VM_ENTRY_FAIL_GUEST_STATE,
-    VM_ENTRY_FAIL_MSR_LOAD,
-    G_MWAIT,
-    G_MONITOR,
-    G_PAUSE,
-    VM_ENTRY_FAIL_MACHINE_CHECK,
-    TPR_THRESH,
-    G_APIC,
-    G_WBINVD,
-    G_XSETBV
-};
+
 
 /*
 typedef struct vmcs {
