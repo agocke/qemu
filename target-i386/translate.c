@@ -4848,6 +4848,8 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 
             } else if (prefixes & PREFIX_REPZ) {
                 /* vmxon */
+            	FILE *f = fopen("vmxlog.log", "w");
+            	qemu_log_try_set_file(f);
                 if ((mod == 3) || s->vm86 || !s->pe
 #ifdef TARGET_X86_64
                 		|| (s->lma && !s->code64)

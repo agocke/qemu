@@ -5534,6 +5534,7 @@ void helper_vmexit(uint32_t exit_code, uint64_t exit_info_1)
 // I do not understand why we need this.
 void helper_vmxon(void)
 {
+	qemu_log("vmxon: enter DUMMY!!!\n");
 	//Dummy function
 }
 
@@ -5592,24 +5593,41 @@ static inline void vmcs_write(int field, target_ulong value)
 
 static inline void vm_succeed(void)
 {
+	qemu_log("vmsucceed: enter\n");
+
     env->eflags &= ~(CC_C | CC_P | CC_A | CC_Z | CC_S | CC_O );
 }
 
 static inline void vm_fail_invalid(void)
 {
+	qemu_log("vm_fail_invalid: enter\n");
+
     env->eflags &= ~(CC_P | CC_A | CC_Z | CC_S | CC_O );
     env->eflags |= CC_C;
 }
 
 static inline void vm_fail_valid(uint32_t err)
 {
+	qemu_log("vm_fail_invalid: enter\n");
+
     env->eflags &= ~(CC_C | CC_P | CC_A | CC_S | CC_O );
     env->eflags |= CC_Z;
     vmcs_write(vm_instruction_error, err);
 }
 
+
+// (not in VMX operation) or (RFLAGS.VM = 1) or (IA32_EFER.LMA = 1 and CS.L = 0)
+static inline int vm_instruction_basic_check(void)
+{
+	return (!env->vmx.enabled || env->eflags & VM_MASK
+			|| (env->hflags & HF_LMA_MASK && env->segs[R_CS].limit == 0));
+}
+
+
 static inline void vm_fail(uint32_t err)
 {
+	qemu_log("vm_fail: enter error:%d\n", err);
+
     if(env->vmx.cur_vmcs == NO_VMCS){
         vm_fail_invalid();
     }
@@ -5619,11 +5637,13 @@ static inline void vm_fail(uint32_t err)
 }
 
 void vm_exit(uint32_t reason) {
+	qemu_log("vm_exit: enter reason:%d\n", reason);
 	// TODO: Implement
 }
 
 void helper_vmxon(void)
 {
+	qemu_log("vmxom: enter\n");
 	if ((env->cr[4] & CR4_VMXE_MASK) == 0)
 		raise_exception_err(EXCP06_ILLOP, 0);
 
@@ -5633,8 +5653,9 @@ void helper_vmxon(void)
 
 void helper_vmxoff(void)
 {
-	if (!env->vmx.enabled || env->eflags & VM_MASK
-			|| ((env->hflags & HF_LMA_MASK) && (env->segs[R_CS].limit == 0))) {
+	qemu_log("vmxoff: enter\n");
+
+	if (vm_instruction_basic_check()) {
 		raise_exception_err(EXCP06_ILLOP, 0);
 	} else if (env->vmx.in_non_root) {
 		vm_exit(G_VMXOFF);
@@ -5656,6 +5677,8 @@ void helper_vmxoff(void)
 
 void helper_vmclear(target_ulong ptr)
 {
+	qemu_log("vmclear: enter ptr:%d\n", ptr);
+
     int i;
 
     if (!env->vmx.enabled)
@@ -5673,6 +5696,8 @@ void helper_vmclear(target_ulong ptr)
 
 void helper_vmptrld(target_ulong ptr)
 {
+	qemu_log("vmptrld: enter ptr:%d\n", ptr);
+
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
 
@@ -5687,6 +5712,8 @@ void helper_vmptrld(target_ulong ptr)
  */
 void helper_vmptrst(target_ulong ptr)
 {
+	qemu_log("vmptrst: enter ptr:%d\n", ptr);
+
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
 
@@ -5696,6 +5723,8 @@ void helper_vmptrst(target_ulong ptr)
 target_ulong helper_vmread(target_ulong index)
 {
     int i, field;
+
+    qemu_log("vmread: enter %d\n", index);
 
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
@@ -5725,6 +5754,8 @@ void helper_vmwrite(target_ulong index, target_ulong value)
     int i, field;
     int code64 = env->hflags & HF_CS64_MASK;
 
+    qemu_log("vmwrite: enter index:%d  value:%d\n", index, value);
+
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
 
@@ -5753,24 +5784,60 @@ void helper_vmlaunch(uint32_t resume)
 {
     int ls;
 
-    if (!env->vmx.enabled)
+    qemu_log("vmlaunch: enter resume:%d\n", resume);
+    /* Basic VM-Entry Checks */
+
+    // TODO: invalid opcode if in virtual-8086 or compatibility mode
+    if (vm_instruction_basic_check()) {
         raise_exception_err(EXCP06_ILLOP, 0);
+        return;
+    }
+
+    if (env->vmx.in_non_root) {
+    	// TODO: Use define
+    	vm_exit(20);
+    	return;
+    }
+
+    // checking cpl == 0
+    if ((env->hflags & HF_CPL_MASK) != 0) {
+    	raise_exception_err(EXCP0D_GPF, 0);
+    	return;
+    }
 
     if (env->vmx.cur_vmcs == NO_VMCS) {
-        /* TODO VMfail */
+    	vm_fail_invalid();
         return;
+    }
+
+    if (0) { // TODO: Events are blocking by MOV SS
+		vm_fail(VMENTRY_EVENTS_BLOCKED_BY_MOV_SS);
+		return;
     }
 
     ls = vmcs_read(launch_state);
-    if ((resume && ls != VMX_LS_LAUNCHED)
-        || (!resume && ls != VMX_LS_CLEAR)) {
-        /* TODO VMfail */
+    if (resume && ls != VMX_LS_LAUNCHED) {
+    	vm_fail(VMRESUME_NL_VMCS);
+    	return;
+    }
+
+    if(!resume && ls != VMX_LS_CLEAR) {
+       	vm_fail(VMLAUNCH_NC_VMCS);
         return;
     }
+
+    // TODO: Check settings of VMX controls and host-state area;
+
+    // TODO: Attempt to load guest state and PDPTRs as appropriate;
+
+    // TODO: clear address-range monitoring;
+
+    // TODO: Attempt to load MSRs from VM-entry MSR-load area;
 
     vmcs_write(launch_state, VMX_LS_LAUNCHED);
 
     env->vmx.in_non_root = 1;
+    vm_succeed();
 }
 
 
