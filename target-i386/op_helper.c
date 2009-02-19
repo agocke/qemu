@@ -5578,6 +5578,9 @@ void helper_vmlaunch(uint32_t resume)
 #else
 
 
+void helper_vmx_vmexit(uint32_t exit_reason, uint64_t exit_qual)
+{
+}
 /* small helper function for VMX */
 static inline target_ulong vmcs_read(int field)
 {
