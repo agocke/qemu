@@ -5579,9 +5579,7 @@ void helper_vmlaunch(uint32_t resume)
 #else
 
 
-void helper_vmx_vmexit(uint32_t exit_reason, uint64_t exit_qual)
-{
-}
+
 /* small helper function for VMX */
 static inline target_ulong vmcs_read(int field)
 {
@@ -5639,9 +5637,20 @@ static inline void vm_fail(uint32_t err)
     }
 }
 
-void vm_exit(uint32_t reason) {
-	qemu_log("vm_exit: enter reason:%d\n", reason);
-	// TODO: Implement
+static inline void helper_vmx_vmexit(uint32_t exit_info)
+{
+
+	/* Save processor state into guest-state area */
+	vmcs_write(guest_cr0, env->cr[0]);
+	vmcs_write(guest_cr3, env->cr[3]);
+	vmcs_write(guest_cr4, env->cr[4]);
+	vmcs_write(guest_dr7, env->dr[7]);
+	vmcs_write(guest_ia32_debugctl, env->ia32_debugctl);
+
+	/* Save MSRs into VM-Exit MSR-store area */
+	/* Load processor state from host-state area */
+	/* Clear address-range monitoring */
+	/* Load MSRs from VM-exit MSR-load area */
 }
 
 void helper_vmxon(void)
@@ -5661,7 +5670,7 @@ void helper_vmxoff(void)
 	if (vm_instruction_basic_check()) {
 		raise_exception_err(EXCP06_ILLOP, 0);
 	} else if (env->vmx.in_non_root) {
-		vm_exit(G_VMXOFF);
+		helper_vmx_vmexit(G_VMXOFF);
 	} else if (0) { // CPL > 0 ???
 		// #GP(0); ???
 	} else if (0) { // dual-monitor treatment of SMIs and SMM is active
@@ -5755,7 +5764,8 @@ found:
 void helper_vmwrite(target_ulong index, target_ulong value)
 {
     int i, field;
-    int code64 = env->hflags & HF_CS64_MASK;
+	// TODO: this is not used for some reason
+    //int code64 = env->hflags & HF_CS64_MASK;
 
     qemu_log("vmwrite: enter index:%d  value:%d\n", index, value);
 
@@ -5798,7 +5808,7 @@ void helper_vmlaunch(uint32_t resume)
 
     if (env->vmx.in_non_root) {
     	// TODO: Use define
-    	vm_exit(20);
+    	helper_vmx_vmexit(20);
     	return;
     }
 
