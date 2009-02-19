@@ -5645,7 +5645,48 @@ static inline void helper_vmx_vmexit(uint32_t exit_info)
 	vmcs_write(guest_cr3, env->cr[3]);
 	vmcs_write(guest_cr4, env->cr[4]);
 	vmcs_write(guest_dr7, env->dr[7]);
-	vmcs_write(guest_ia32_debugctl, env->ia32_debugctl);
+	vmcs_write(guest_ia32_sysenter_cs, env->sysenter_cs & 0x0000ffff);
+#ifdef TARGET_X86_64
+	vmcs_write(guest_ia32_sysenter_esp, env->sysenter_esp);
+	vmcs_write(guest_ia32_sysenter_eip, env->sysenter_eip);
+#else
+	vmcs_write(guest_ia32_sysenter_esp, env->sysenter_esp & 0x0000ffff);
+	vmcs_write(guest_ia32_sysenter_eip, env->sysenter_eip & 0x0000ffff);
+#endif
+	/* see if segments are useable before saving */
+	//if (env->segs[R_CS].access & 0x00008000) { /* unuseable */
+	if (0) { /* unuseable */
+		vmcs_write(guest_cs_base, env->segs[R_CS].base);
+		vmcs_write(guest_cs_limit, env->segs[R_CS].limit);
+		/* save L, D and G bits */
+		//TODO: Where is the segment access field?
+		//vmcs_write(guest_cs_access, env->segs[R_CS].access & 0x00007000);
+	}
+	else { /* useable */
+		vmcs_write(guest_cs_base, env->segs[R_CS].base);
+		vmcs_write(guest_cs_limit, env->segs[R_CS].limit);
+		/* clear 31:16 and 11:8 */
+		//TODO: Where is the segment access field?
+		//vmcs_write(guest_cs_access, env->segs[R_CS].access & 0x0000f0ff);
+	}
+	vmcs_write(guest_ss_base, env->segs[R_SS].base);
+	vmcs_write(guest_ss_limit, env->segs[R_SS].limit);
+	vmcs_write(guest_ds_base, env->segs[R_DS].base);
+	vmcs_write(guest_ds_limit, env->segs[R_DS].limit);
+	vmcs_write(guest_es_base, env->segs[R_ES].base);
+	vmcs_write(guest_es_limit, env->segs[R_ES].limit);
+	vmcs_write(guest_fs_base, env->segs[R_FS].base);
+	vmcs_write(guest_fs_limit, env->segs[R_FS].limit);
+	vmcs_write(guest_gs_base, env->segs[R_GS].base);
+	vmcs_write(guest_gs_limit, env->segs[R_GS].limit);
+
+	vmcs_write(guest_gdtr_base, env->gdt.base);
+	vmcs_write(guest_gdtr_limit, env->gdt.limit);
+	vmcs_write(guest_idtr_base, env->idt.base);
+	vmcs_write(guest_idtr_limit, env->idt.limit);
+
+
+
 
 	/* Save MSRs into VM-Exit MSR-store area */
 	/* Load processor state from host-state area */
