@@ -92,6 +92,7 @@
 
 #define DESC_E_MASK     (1 << 10) /* data: expansion direction */
 #define DESC_W_MASK     (1 << 9)  /* data: writable */
+#define VMEXIT_CLR_MASK	0x0001F0FF /* clear 31:17 and 11:8 on vmexit */
 
 #define DESC_TSS_BUSY_MASK (1 << 9)
 
