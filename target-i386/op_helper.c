@@ -5653,23 +5653,32 @@ static inline void helper_vmx_vmexit(uint32_t exit_info)
 	vmcs_write(guest_ia32_sysenter_esp, env->sysenter_esp & 0x0000ffff);
 	vmcs_write(guest_ia32_sysenter_eip, env->sysenter_eip & 0x0000ffff);
 #endif
-	/* see if segments are useable before saving */
-	//if (env->segs[R_CS].access & 0x00008000) { /* unuseable */
-	if (0) { /* unuseable */
+	/* see if segments are usable before saving */
+	if (env->segs[R_CS].selector == 0) { /* unusable */
 		vmcs_write(guest_cs_base, env->segs[R_CS].base);
 		vmcs_write(guest_cs_limit, env->segs[R_CS].limit);
-		/* save L, D and G bits */
-		//TODO: Where is the segment access field?
-		//vmcs_write(guest_cs_access, env->segs[R_CS].access & 0x00007000);
+		vmcs_write(guest_cs_access, env->segs[R_CS].flags & 
+                  (DESC_G_MASK | DESC_B_MASK | DESC_L_MASK) );
 	}
-	else { /* useable */
+	else { /* usable */
 		vmcs_write(guest_cs_base, env->segs[R_CS].base);
 		vmcs_write(guest_cs_limit, env->segs[R_CS].limit);
 		/* clear 31:16 and 11:8 */
-		//TODO: Where is the segment access field?
-		//vmcs_write(guest_cs_access, env->segs[R_CS].access & 0x0000f0ff);
+		vmcs_write(guest_cs_access, env->segs[R_CS].flags & 0x0000f0ff);
 	}
-	vmcs_write(guest_ss_base, env->segs[R_SS].base);
+
+	if (env->segs[R_SS].selector == 0) { /* unusable */
+		vmcs_write(guest_cs_access, env->segs[R_SS].flags & DESC_DLP_MASK );
+	}
+	else { /* usable */
+		vmcs_write(guest_cs_base, env->segs[R_CS].base);
+		vmcs_write(guest_cs_limit, env->segs[R_CS].limit);
+		/* clear 31:16 and 11:8 */
+		vmcs_write(guest_cs_access, env->segs[R_CS].flags & 0x0000f0ff);
+	}
+
+
+    vmcs_write(guest_ss_base, env->segs[R_SS].base);
 	vmcs_write(guest_ss_limit, env->segs[R_SS].limit);
 	vmcs_write(guest_ds_base, env->segs[R_DS].base);
 	vmcs_write(guest_ds_limit, env->segs[R_DS].limit);
