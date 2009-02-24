@@ -2066,7 +2066,7 @@ void helper_cpuid(void)
     uint32_t eax, ebx, ecx, edx;
 
     helper_svm_check_intercept_param(SVM_EXIT_CPUID, 0);
-    helper_vmx_check_intercept_param(G_CPUID, 0);
+    helper_vmx_check_intercept_param(VMX_EXIT_G_CPUID, 0);
 
     cpu_x86_cpuid(env, (uint32_t)EAX, &eax, &ebx, &ecx, &edx);
     EAX = eax;
@@ -5777,7 +5777,7 @@ void helper_vmxoff(void)
 	if (vm_instruction_basic_check()) {
 		raise_exception_err(EXCP06_ILLOP, 0);
 	} else if (env->vmx.in_non_root) {
-		helper_vmx_vmexit(G_VMXOFF);
+		helper_vmx_vmexit(VMX_EXIT_G_VMXOFF);
 	} else if (0) { // CPL > 0 ???
 		// #GP(0); ???
 	} else if (0) { // dual-monitor treatment of SMIs and SMM is active
