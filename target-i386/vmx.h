@@ -24,8 +24,27 @@
 #ifndef VMX_H
 #define VMX_H
 
-#define VMCS_REVISION 0x00000000
-#define NO_VMCS 0xffffffffffffffffLL
+#define VMCS_REVISION	 	0x00000000
+#define NO_VMCS 			0xffffffffffffffffLL
+
+
+/* See Intel Arch 3b Appendix G */
+/* The following are actual values from Core 2 Duo T7500. We may need to
+ * change this accordingly if we haven't implemented everything.
+ */
+#define IA32_VMX_BASIC_MSR 					0x005A08000000000BLL
+#define IA32_VMX_PINBASED_CTLS_MSR			0x0000003F00000016LL
+#define IA32_VMX_PROCBASED_CTLS_MSR			0xF7F9FFFE0401E172LL
+#define IA32_VMX_EXIT_CTLS_MSR				0x0003EFFF00036DFFLL
+#define IA32_VMX_ENTRY_CTLS_MSR				0x00001FFF000011FFLL
+#define IA32_VMX_MISC_MSR					0x00000000000403C0LL
+#define IA32_VMX_CR0_FIXED0_MSR				0x0000000080000021LL
+#define IA32_VMX_CR0_FIXED1_MSR				0x00000000FFFFFFFFLL
+#define IA32_VMX_CR4_FIXED0_MSR				0x0000000000002000LL
+#define IA32_VMX_CR4_FIXED1_MSR				0x00000000000027FFLL
+#define IA32_VMX_VMCS_ENUM_MSR				0x000000000000002CLL
+
+
 
 /* See Intel Arch 3b Appendix I */
 #define EXCEP_OR_NMI_INT 0x00
@@ -40,7 +59,8 @@
 #define TASK_SWITCH 0x09
 #define G_CPUID 0x0a
 #define G_GETSEC 0x0b
-#define G_HLT 0x0c
+// TODO Change names to have VMX_EXIT prefix
+#define VMX_EXIT_HLT 0x0c
 #define G_INVD 0x0d
 #define G_INVLPG 0x0e
 #define G_RDPMC 0x0f
@@ -285,7 +305,8 @@ enum vm_fail_error {
     VMENTRY_EVENTS_BLOCKED_BY_MOV_SS
 };
 
-
+#define CPU_VM_EXEC_CTL_HLT			(1<<7)
+#define CPU_VM_EXEC_CTL_INVLPG		(1<<9)
 
 /*
 typedef struct vmcs {

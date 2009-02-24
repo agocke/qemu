@@ -253,6 +253,8 @@
 #define MSR_IA32_APICBASE_ENABLE        (1<<11)
 #define MSR_IA32_APICBASE_BASE          (0xfffff<<12)
 
+#define MSR_IA32_FEATURE_CONTROL_MSR	0x3a
+
 #define MSR_IA32_SYSENTER_CS            0x174
 #define MSR_IA32_SYSENTER_ESP           0x175
 #define MSR_IA32_SYSENTER_EIP           0x176
@@ -287,6 +289,12 @@
 #define MSR_IA32_VMX_PROCBASED_CTLS     0x482
 #define MSR_IA32_VMX_EXIT_CTLS          0x483
 #define MSR_IA32_VMX_ENTRY_CTLS         0x484
+#define MSR_IA32_VMX_MISC_MSR           0x485
+#define MSR_IA32_VMX_CR0_FIXED0_MSR	    0x486
+#define MSR_IA32_VMX_CR0_FIXED1_MSR	    0x487
+#define MSR_IA32_VMX_CR4_FIXED0_MSR	    0x488
+#define MSR_IA32_VMX_CR4_FIXED1_MSR	    0x489
+#define MSR_IA32_VMX_VMCS_ENUM_MSR      0x48A
 
 #define MSR_EFER                        0xc0000080
 

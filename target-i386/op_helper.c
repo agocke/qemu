@@ -2066,6 +2066,7 @@ void helper_cpuid(void)
     uint32_t eax, ebx, ecx, edx;
 
     helper_svm_check_intercept_param(SVM_EXIT_CPUID, 0);
+    helper_vmx_check_intercept_param(G_CPUID, 0);
 
     cpu_x86_cpuid(env, (uint32_t)EAX, &eax, &ebx, &ecx, &edx);
     EAX = eax;
@@ -3282,33 +3283,42 @@ void helper_rdmsr(void)
     case MSR_IA32_APICBASE:
         val = cpu_get_apic_base(env);
         break;
+    case MSR_IA32_FEATURE_CONTROL_MSR:
+    	// TODO: Make it a constant
+    	val = (1) | (1 << 2);
+    	break;
     case MSR_IA32_VMX_BASIC:
-        val = (uint64_t) VMCS_REVISION | (0x1000LL << 32) | (6LL << 50);
+    	val = IA32_VMX_BASIC_MSR;
 #ifdef TARGET_I386
         val |= (uint64_t)(1LL << 48);
 #endif
         break;
     case MSR_IA32_VMX_PINBASED_CTLS:
-        val = 0xffffffff;
+    	val = IA32_VMX_PINBASED_CTLS_MSR;
         break;
     case MSR_IA32_VMX_PROCBASED_CTLS:
-        val = 0
-            | (1 <<  3)
-            | (1 <<  7)
-            | (1 << 15)
-            | (1 << 16)
-            | (1 << 19)
-            | (1 << 20)
-            | (1 << 23)
-            | (1 << 25)
-            ;
-        val |= (val << 32);
+    	val = IA32_VMX_PROCBASED_CTLS_MSR;
         break;
     case MSR_IA32_VMX_EXIT_CTLS:
-        val = 0xffffffff;
+        val = IA32_VMX_EXIT_CTLS_MSR;
         break;
     case MSR_IA32_VMX_ENTRY_CTLS:
-        val = 0xffffffff;
+        val = IA32_VMX_ENTRY_CTLS_MSR;
+        break;
+    case MSR_IA32_VMX_MISC_MSR:
+    	val = IA32_VMX_MISC_MSR;
+    	break;
+    case MSR_IA32_VMX_CR0_FIXED0_MSR:
+    	val = IA32_VMX_CR0_FIXED0_MSR;
+    	break;
+    case MSR_IA32_VMX_CR0_FIXED1_MSR:
+        val = IA32_VMX_CR0_FIXED1_MSR;
+        break;
+    case MSR_IA32_VMX_CR4_FIXED0_MSR:
+        val = IA32_VMX_CR4_FIXED0_MSR;
+        break;
+    case MSR_IA32_VMX_CR4_FIXED1_MSR:
+        val = IA32_VMX_CR4_FIXED1_MSR;
         break;
     case MSR_EFER:
         val = env->efer;
@@ -4786,6 +4796,8 @@ static void do_hlt(void)
 void helper_hlt(int next_eip_addend)
 {
     helper_svm_check_intercept_param(SVM_EXIT_HLT, 0);
+    helper_vmx_check_intercept_param(VMX_EXIT_HLT, 0);
+
     EIP += next_eip_addend;
 
     do_hlt();
@@ -5575,6 +5587,9 @@ void helper_vmlaunch(uint32_t resume)
 	// Dummy function
 }
 
+void helper_vmx_check_intercept_param(uint32_t type, uint64_t param)
+{
+}
 
 #else
 
@@ -5692,6 +5707,26 @@ static inline void helper_vmx_vmexit(uint32_t exit_info)
 	/* Load processor state from host-state area */
 	/* Clear address-range monitoring */
 	/* Load MSRs from VM-exit MSR-load area */
+}
+
+
+void helper_vmx_check_intercept_param(uint32_t type, uint64_t param) {
+	uint32_t x;
+
+	if (!(env->vmx.enabled && env->vmx.in_non_root))
+		return;
+
+	switch (type) {
+	case VMX_EXIT_HLT:
+		x = helper_vmread(cpu_vm_exec_ctl);
+		if (x & CPU_VM_EXEC_CTL_HLT) {
+			helper_vmx_vmexit(type);
+		}
+		break;
+	default:
+		helper_vmx_vmexit(type);
+		break;
+	}
 }
 
 void helper_vmxon(void)
