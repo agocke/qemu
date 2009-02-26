@@ -47,50 +47,49 @@
 
 
 /* See Intel Arch 3b Appendix I */
-#define EXCEP_OR_NMI_INT 0x00
-#define EXTERN_INT 0x01
-#define TRIPLE_FAULT 0x02
-#define INIT_SIGNAL 0x03
-#define STARTUP_IPI 0x04
-#define IO_SMI_INT 0x05
-#define SMI_OTHER 0x06
-#define INT_WINDOW 0x07
-#define NMI_WINDOW 0x08
-#define TASK_SWITCH 0x09
-#define G_CPUID 0x0a
-#define G_GETSEC 0x0b
-// TODO Change names to have VMX_EXIT prefix
-#define VMX_EXIT_HLT 0x0c
-#define G_INVD 0x0d
-#define G_INVLPG 0x0e
-#define G_RDPMC 0x0f
-#define G_RDTSC 0x10
-#define G_RSM 0x11
-#define G_VMCALL 0x12
-#define G_VMCLEAR 0x13
-#define G_VMLAUNCH 0x14
-#define G_VMPTRLD 0x15
-#define G_VMPTRST 0x16
-#define G_VMREAD 0x17
-#define G_VMRESUME 0x18
-#define G_VMWRITE 0x19
-#define G_VMXOFF 0x1a
-#define G_VMXON 0x1b
-#define G_CTL_REG 0x1c
-#define G_MOV_DR 0x1d
-#define G_IO 0x1e
-#define G_RDMSR 0x1f
-#define G_WRMSR 0x20
-#define VM_ENTRY_FAIL_GUEST_STATE 0x21
-#define VM_ENTRY_FAIL_MSR_LOAD 0x22
-#define G_MWAIT 0x24
-#define G_MONITOR 0x27
-#define G_PAUSE 0x28
-#define VM_ENTRY_FAIL_MACHINE_CHECK 0x29
-#define TPR_THRESH 0x2b
-#define G_APIC 0x2c
-#define G_WBINVD 0x36
-#define G_XSETBV 0x37
+#define VMX_EXIT_EXCEP_OR_NMI_INT 0x00
+#define VMX_EXIT_EXTERN_INT 0x01
+#define VMX_EXIT_TRIPLE_FAULT 0x02
+#define VMX_EXIT_INIT_SIGNAL 0x03
+#define VMX_EXIT_STARTUP_IPI 0x04
+#define VMX_EXIT_IO_SMI_INT 0x05
+#define VMX_EXIT_SMI_OTHER 0x06
+#define VMX_EXIT_INT_WINDOW 0x07
+#define VMX_EXIT_NMI_WINDOW 0x08
+#define VMX_EXIT_TASK_SWITCH 0x09
+#define VMX_EXIT_G_CPUID 0x0a
+#define VMX_EXIT_G_GETSEC 0x0b
+#define VMX_EXIT_G_HLT 0x0c
+#define VMX_EXIT_G_INVD 0x0d
+#define VMX_EXIT_G_INVLPG 0x0e
+#define VMX_EXIT_G_RDPMC 0x0f
+#define VMX_EXIT_G_RDTSC 0x10
+#define VMX_EXIT_G_RSM 0x11
+#define VMX_EXIT_G_VMCALL 0x12
+#define VMX_EXIT_G_VMCLEAR 0x13
+#define VMX_EXIT_G_VMLAUNCH 0x14
+#define VMX_EXIT_G_VMPTRLD 0x15
+#define VMX_EXIT_G_VMPTRST 0x16
+#define VMX_EXIT_G_VMREAD 0x17
+#define VMX_EXIT_G_VMRESUME 0x18
+#define VMX_EXIT_G_VMWRITE 0x19
+#define VMX_EXIT_G_VMXOFF 0x1a
+#define VMX_EXIT_G_VMXON 0x1b
+#define VMX_EXIT_G_CTL_REG 0x1c
+#define VMX_EXIT_G_MOV_DR 0x1d
+#define VMX_EXIT_G_IO 0x1e
+#define VMX_EXIT_G_RDMSR 0x1f
+#define VMX_EXIT_G_WRMSR 0x20
+#define VMX_EXIT_ENTRY_FAIL_GUEST_STATE 0x21
+#define VMX_EXIT_ENTRY_FAIL_MSR_LOAD 0x22
+#define VMX_EXIT_G_MWAIT 0x24
+#define VMX_EXIT_G_MONITOR 0x27
+#define VMX_EXIT_G_PAUSE 0x28
+#define VMX_EXIT_ENTRY_FAIL_MACHINE_CHECK 0x29
+#define VMX_EXIT_TPR_THRESH 0x2b
+#define VMX_EXIT_G_APIC 0x2c
+#define VMX_EXIT_G_WBINVD 0x36
+#define VMX_EXIT_G_XSETBV 0x37
 
 /* Part of the CPUX86State struct */
 typedef struct vmx_status {
@@ -305,8 +304,27 @@ enum vm_fail_error {
     VMENTRY_EVENTS_BLOCKED_BY_MOV_SS
 };
 
+//TODO: Add Pin-Based VM-Execution Controls
+
+//Primary Processor-Based VM-Execution Controls
 #define CPU_VM_EXEC_CTL_HLT			(1<<7)
 #define CPU_VM_EXEC_CTL_INVLPG		(1<<9)
+#define CPU_VM_EXEC_CTL_MWAIT		(1<<10)
+#define CPU_VM_EXEC_CTL_RDPMC		(1<<11)
+#define CPU_VM_EXEC_CTL_RDTSC		(1<<12)
+#define CPU_VM_EXEC_CTL_CR3_LOAD	(1<<15)
+#define CPU_VM_EXEC_CTL_CR3_STORE	(1<<16)
+#define CPU_VM_EXEC_CTL_CR8_LOAD	(1<<19)
+#define CPU_VM_EXEC_CTL_CR9_STORE	(1<<20)
+#define CPU_VM_EXEC_CTL_NMI_WINDOW	(1<<22)
+#define CPU_VM_EXEC_CTL_MOV_DR		(1<<23)
+#define CPU_VM_EXEC_CTL_UNCON_IO	(1<<24)
+#define CPU_VM_EXEC_CTL_USE_MSR_BMP	(1<<28)
+#define CPU_VM_EXEC_CTL_MONITOR		(1<<29)
+#define CPU_VM_EXEC_CTL_PAUSE		(1<<30)
+
+//TODO: Add Secondary Processor-Based VM-Execution Controls
+
 
 /*
 typedef struct vmcs {

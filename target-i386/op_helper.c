@@ -2068,7 +2068,7 @@ void helper_cpuid(void)
     uint32_t eax, ebx, ecx, edx;
 
     helper_svm_check_intercept_param(SVM_EXIT_CPUID, 0);
-    helper_vmx_check_intercept_param(G_CPUID, 0);
+    helper_vmx_check_intercept_param(VMX_EXIT_G_CPUID, 0);
 
     cpu_x86_cpuid(env, (uint32_t)EAX, &eax, &ebx, &ecx, &edx);
     EAX = eax;
@@ -4798,7 +4798,7 @@ static void do_hlt(void)
 void helper_hlt(int next_eip_addend)
 {
     helper_svm_check_intercept_param(SVM_EXIT_HLT, 0);
-    helper_vmx_check_intercept_param(VMX_EXIT_HLT, 0);
+    helper_vmx_check_intercept_param(VMX_EXIT_G_HLT, 0);
 
     EIP += next_eip_addend;
 
@@ -5748,9 +5748,13 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param) {
 
 	if (!(env->vmx.enabled && env->vmx.in_non_root))
 		return;
+	//TODO
+	//ADD case VMX_EXIT_G_WBINVD
+	//after Secondary Processor-Based VM-Execution Controls
+	//are implemented in vmx.h
 
 	switch (type) {
-	case VMX_EXIT_HLT:
+	case VMX_EXIT_G_HLT:
 		x = helper_vmread(cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_HLT) {
 			helper_vmx_vmexit(type);
@@ -5779,7 +5783,7 @@ void helper_vmxoff(void)
 	if (vm_instruction_basic_check()) {
 		raise_exception_err(EXCP06_ILLOP, 0);
 	} else if (env->vmx.in_non_root) {
-		helper_vmx_vmexit(G_VMXOFF);
+		helper_vmx_vmexit(VMX_EXIT_G_VMXOFF);
 	} else if (0) { // CPL > 0 ???
 		// #GP(0); ???
 	} else if (0) { // dual-monitor treatment of SMIs and SMM is active
