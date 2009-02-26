@@ -1462,9 +1462,11 @@ static void noreturn raise_interrupt(int intno, int is_int, int error_code,
 {
     if (!is_int) {
         helper_svm_check_intercept_param(SVM_EXIT_EXCP_BASE + intno, error_code);
+        // TODO: helper_svm_check_intercept_param()
         intno = check_exception(intno, &error_code);
     } else {
         helper_svm_check_intercept_param(SVM_EXIT_SWINT, 0);
+        // TODO: helper_svm_check_intercept_param()
     }
 
     env->exception_index = intno;
@@ -5673,7 +5675,7 @@ static inline void helper_vmx_vmexit(uint32_t exit_info)
 	if (env->segs[R_CS].selector == 0) { /* unusable */
 		vmcs_write(guest_cs_base, env->segs[R_CS].base);
 		vmcs_write(guest_cs_limit, env->segs[R_CS].limit);
-		vmcs_write(guest_cs_access, env->segs[R_CS].flags & 
+		vmcs_write(guest_cs_access, env->segs[R_CS].flags &
                   (DESC_G_MASK | DESC_B_MASK | DESC_L_MASK | VMEXIT_CLR_MASK) );
 	}
 	else { /* usable */
