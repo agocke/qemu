@@ -59,7 +59,7 @@
 #define VMX_EXIT_TASK_SWITCH 0x09
 #define VMX_EXIT_G_CPUID 0x0a
 #define VMX_EXIT_G_GETSEC 0x0b
-#define VMX_EXIT_HLT 0x0c
+#define VMX_EXIT_G_HLT 0x0c
 #define VMX_EXIT_G_INVD 0x0d
 #define VMX_EXIT_G_INVLPG 0x0e
 #define VMX_EXIT_G_RDPMC 0x0f
@@ -304,8 +304,27 @@ enum vm_fail_error {
     VMENTRY_EVENTS_BLOCKED_BY_MOV_SS
 };
 
+//TODO: Add Pin-Based VM-Execution Controls
+
+//Primary Processor-Based VM-Execution Controls
 #define CPU_VM_EXEC_CTL_HLT			(1<<7)
 #define CPU_VM_EXEC_CTL_INVLPG		(1<<9)
+#define CPU_VM_EXEC_CTL_MWAIT		(1<<10)
+#define CPU_VM_EXEC_CTL_RDPMC		(1<<11)
+#define CPU_VM_EXEC_CTL_RDTSC		(1<<12)
+#define CPU_VM_EXEC_CTL_CR3_LOAD	(1<<15)
+#define CPU_VM_EXEC_CTL_CR3_STORE	(1<<16)
+#define CPU_VM_EXEC_CTL_CR8_LOAD	(1<<19)
+#define CPU_VM_EXEC_CTL_CR9_STORE	(1<<20)
+#define CPU_VM_EXEC_CTL_NMI_WINDOW	(1<<22)
+#define CPU_VM_EXEC_CTL_MOV_DR		(1<<23)
+#define CPU_VM_EXEC_CTL_UNCON_IO	(1<<24)
+#define CPU_VM_EXEC_CTL_USE_MSR_BMP	(1<<28)
+#define CPU_VM_EXEC_CTL_MONITOR		(1<<29)
+#define CPU_VM_EXEC_CTL_PAUSE		(1<<30)
+
+//TODO: Add Secondary Processor-Based VM-Execution Controls
+
 
 /*
 typedef struct vmcs {

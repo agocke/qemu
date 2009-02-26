@@ -4796,7 +4796,7 @@ static void do_hlt(void)
 void helper_hlt(int next_eip_addend)
 {
     helper_svm_check_intercept_param(SVM_EXIT_HLT, 0);
-    helper_vmx_check_intercept_param(VMX_EXIT_HLT, 0);
+    helper_vmx_check_intercept_param(VMX_EXIT_G_HLT, 0);
 
     EIP += next_eip_addend;
 
@@ -5673,7 +5673,7 @@ static inline void helper_vmx_vmexit(uint32_t exit_info)
 	if (env->segs[R_CS].selector == 0) { /* unusable */
 		vmcs_write(guest_cs_base, env->segs[R_CS].base);
 		vmcs_write(guest_cs_limit, env->segs[R_CS].limit);
-		vmcs_write(guest_cs_access, env->segs[R_CS].flags & 
+		vmcs_write(guest_cs_access, env->segs[R_CS].flags &
                   (DESC_G_MASK | DESC_B_MASK | DESC_L_MASK | VMEXIT_CLR_MASK) );
 	}
 	else { /* usable */
@@ -5746,9 +5746,13 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param) {
 
 	if (!(env->vmx.enabled && env->vmx.in_non_root))
 		return;
+	//TODO
+	//ADD case VMX_EXIT_G_WBINVD
+	//after Secondary Processor-Based VM-Execution Controls
+	//are implemented in vmx.h
 
 	switch (type) {
-	case VMX_EXIT_HLT:
+	case VMX_EXIT_G_HLT:
 		x = helper_vmread(cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_HLT) {
 			helper_vmx_vmexit(type);
