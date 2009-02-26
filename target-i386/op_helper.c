@@ -5902,6 +5902,16 @@ found:
 	vmcs_write(field, value);
 }
 
+
+static inline void vm_load_seg(SegmentCache *seg, target_ulong base,
+		target_ulong selector, target_ulong limit, target_ulong access)
+{
+	seg->base = vmcs_read(base);
+	seg->selector = vmcs_read(selector);
+	seg->limit = vmcs_read(limit);
+	seg->flags = vmcs_read(access);
+}
+
 void helper_vmlaunch(uint32_t resume)
 {
     int ls;
@@ -5950,7 +5960,51 @@ void helper_vmlaunch(uint32_t resume)
 
     // TODO: Check settings of VMX controls and host-state area;
 
+    /* save the current state of the CPU */
+    vmcs_write(host_cr0, env->cr[0]);
+    vmcs_write(host_cr3, env->cr[3]);
+    vmcs_write(host_cr4, env->cr[4]);
+    vmcs_write(host_fs_base, env->segs[R_FS].base);
+    vmcs_write(host_gs_base, env->segs[R_GS].base);
+    vmcs_write(host_tr_base, env->tr.base);
+    vmcs_write(host_gdtr_base, env->gdt.base);
+    vmcs_write(host_idtr_base, env->idt.base);
+
+    vmcs_write(host_ia32_sysenter_esp, ESP);
+    vmcs_write(host_ia32_sysenter_eip, EIP);
+#ifdef TARGET_X86_64
+    // TODO: figure this out
+    //vmcs_write(host_rsp, R_ESP);
+    //vmcs_write(host_rip, R_EIP);
+#endif
+
+    vmcs_write(host_cs_sel, env->segs[R_CS].selector);
+    vmcs_write(host_ss_sel, env->segs[R_SS].selector);
+    vmcs_write(host_ds_sel, env->segs[R_DS].selector);
+    vmcs_write(host_es_sel, env->segs[R_ES].selector);
+    vmcs_write(host_fs_sel, env->segs[R_FS].selector);
+    vmcs_write(host_gs_sel, env->segs[R_GS].selector);
+    vmcs_write(host_tr_sel, env->tr.selector);
+
+    vmcs_write(host_ia32_sysenter_cs, env->sysenter_cs);
+    // TODO: figure out this two
+    //vmcs_write(host_ia32_perf_global_ctrl, );
+    //vmcs_write(host_ia32_pat, );
+
+    vmcs_write(host_ia32_efer, env->efer);
+
     // TODO: Attempt to load guest state and PDPTRs as appropriate;
+    cpu_x86_update_cr0(env, vmcs_read(guest_cr0));
+    cpu_x86_update_cr3(env, vmcs_read(guest_cr3));
+    cpu_x86_update_cr4(env, vmcs_read(guest_cr4));
+    env->segs[R_ES].base = vmcs_read(guest_es_base);
+    vm_load_seg(&env->segs[R_ES], guest_es_base, guest_es_sel, guest_es_limit, guest_es_access);
+    vm_load_seg(&env->segs[R_CS], guest_cs_base, guest_cs_sel, guest_cs_limit, guest_cs_access);
+    vm_load_seg(&env->segs[R_SS], guest_ss_base, guest_ss_sel, guest_ss_limit, guest_ss_access);
+    vm_load_seg(&env->segs[R_DS], guest_ds_base, guest_ds_sel, guest_ds_limit, guest_ds_access);
+    vm_load_seg(&env->segs[R_FS], guest_fs_base, guest_fs_sel, guest_fs_limit, guest_fs_access);
+    vm_load_seg(&env->segs[R_GS], guest_gs_base, guest_gs_sel, guest_gs_limit, guest_gs_access);
+
 
     // TODO: clear address-range monitoring;
 
