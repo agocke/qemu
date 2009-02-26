@@ -91,6 +91,14 @@
 #define VMX_EXIT_G_WBINVD 0x36
 #define VMX_EXIT_G_XSETBV 0x37
 
+
+
+// VMX Exit interupt types
+#define VMX_EXIT_INTERRUPTION_TYPE_EXTERNAL 	0
+#define VMX_EXIT_INTERRUPTION_TYPE_NMI 			2
+#define VMX_EXIT_INTERRUPTION_TYPE_HARDWARE 	3
+#define VMX_EXIT_INTERRUPTION_TYPE_SOFTWARE 	6
+
 /* Part of the CPUX86State struct */
 typedef struct vmx_status {
 	int			 	enabled;

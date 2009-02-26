@@ -1462,10 +1462,15 @@ static void noreturn raise_interrupt(int intno, int is_int, int error_code,
 {
     if (!is_int) {
         helper_svm_check_intercept_param(SVM_EXIT_EXCP_BASE + intno, error_code);
-        // TODO: helper_svm_check_intercept_param()
+        if (intno < 32)
+        	helper_vmx_check_intercept_param(VMX_EXIT_EXCEP_OR_NMI_INT, intno, VMX_EXIT_INTERRUPTION_TYPE_HARDWARE);
+        else
+        	helper_vmx_check_intercept_param(VMX_EXIT_EXCEP_OR_NMI_INT, intno, VMX_EXIT_INTERRUPTION_TYPE_EXTERNAL);
+
         intno = check_exception(intno, &error_code);
     } else {
         helper_svm_check_intercept_param(SVM_EXIT_SWINT, 0);
+        helper_vmx_check_intercept_param(VMX_EXIT_EXCEP_OR_NMI_INT, intno, VMX_EXIT_INTERRUPTION_TYPE_SOFTWARE);
         // TODO: helper_svm_check_intercept_param()
     }
 
@@ -2068,7 +2073,7 @@ void helper_cpuid(void)
     uint32_t eax, ebx, ecx, edx;
 
     helper_svm_check_intercept_param(SVM_EXIT_CPUID, 0);
-    helper_vmx_check_intercept_param(VMX_EXIT_G_CPUID, 0);
+    helper_vmx_check_intercept_param(VMX_EXIT_G_CPUID, 0, 0);
 
     cpu_x86_cpuid(env, (uint32_t)EAX, &eax, &ebx, &ecx, &edx);
     EAX = eax;
@@ -4798,7 +4803,7 @@ static void do_hlt(void)
 void helper_hlt(int next_eip_addend)
 {
     helper_svm_check_intercept_param(SVM_EXIT_HLT, 0);
-    helper_vmx_check_intercept_param(VMX_EXIT_G_HLT, 0);
+    helper_vmx_check_intercept_param(VMX_EXIT_G_HLT, 0, 0);
 
     EIP += next_eip_addend;
 
@@ -5589,7 +5594,7 @@ void helper_vmlaunch(uint32_t resume)
 	// Dummy function
 }
 
-void helper_vmx_check_intercept_param(uint32_t type, uint64_t param)
+void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t inter_type)
 {
 }
 
@@ -5743,8 +5748,8 @@ static inline void helper_vmx_vmexit(uint32_t exit_info)
 }
 
 
-void helper_vmx_check_intercept_param(uint32_t type, uint64_t param) {
-	uint32_t x;
+void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t inter_type) {
+	uint32_t x, y;
 
 	if (!(env->vmx.enabled && env->vmx.in_non_root))
 		return;
@@ -5754,12 +5759,21 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param) {
 	//are implemented in vmx.h
 
 	switch (type) {
+	case VMX_EXIT_EXCEP_OR_NMI_INT:
+		x = helper_vmread(exception_bitmap);
+		if (x & (1 << param)) {
+			y = (1<<31) | (inter_type << 8) | param;
+			helper_vmwrite(vmexit_intr_info, y);
+			helper_vmx_vmexit(type);
+		}
+		break;
 	case VMX_EXIT_G_HLT:
 		x = helper_vmread(cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_HLT) {
 			helper_vmx_vmexit(type);
 		}
 		break;
+
 	default:
 		helper_vmx_vmexit(type);
 		break;

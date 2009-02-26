@@ -2332,10 +2332,11 @@ static inline int svm_is_rep(int prefixes)
 
 /* VMX INTERCEPT FUNCTION */
 static inline void
-gen_vmx_check_intercept_param(uint32_t type, uint64_t param)
+gen_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t inter_type)
 {
     gen_helper_vmx_check_intercept_param(tcg_const_i32(type),
-                                         tcg_const_i64(param));
+                                         tcg_const_i64(param),
+                                         tcg_const_i32(inter_type));
 }
 
 static inline void
@@ -7258,7 +7259,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         break;
     case 0x108: /* invd */
     case 0x109: /* wbinvd */
-    	gen_vmx_check_intercept_param( (b & 2) ? VMX_EXIT_G_INVD : VMX_EXIT_G_WBINVD,0);
+    	gen_vmx_check_intercept_param( (b & 2) ? VMX_EXIT_G_INVD : VMX_EXIT_G_WBINVD, 0, 0);
         if (s->cpl != 0) {
             gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
         } else {
