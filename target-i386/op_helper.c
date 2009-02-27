@@ -3132,6 +3132,7 @@ void helper_rdtsc(void)
         raise_exception(EXCP0D_GPF);
     }
     helper_svm_check_intercept_param(SVM_EXIT_RDTSC, 0);
+    helper_vmx_check_intercept_param(VMX_EXIT_G_RDTSC,0,0);
 
     val = cpu_get_tsc(env) + env->tsc_offset;
     EAX = (uint32_t)(val);
@@ -5783,6 +5784,12 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 	case VMX_EXIT_G_RDPMC:
 		x = helper_vmread(cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_RDPMC) {
+			helper_vmx_vmexit(type);
+		}
+		break;
+	case VMX_EXIT_G_RDTSC:
+		x = helper_vmread(cpu_vm_exec_ctl);
+		if (x & CPU_VM_EXEC_CTL_RDTSC) {
 			helper_vmx_vmexit(type);
 		}
 		break;
