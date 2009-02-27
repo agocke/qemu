@@ -6639,6 +6639,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             goto illegal_op;
         if (prefixes & PREFIX_REPZ) {
             gen_svm_check_intercept(s, pc_start, SVM_EXIT_PAUSE);
+            gen_vmx_check_intercept_param(VMX_EXIT_G_PAUSE,0,0);
         }
         break;
     case 0x9b: /* fwait */

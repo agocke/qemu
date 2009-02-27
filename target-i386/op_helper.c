@@ -5793,6 +5793,12 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 			helper_vmx_vmexit(type);
 		}
 		break;
+	case VMX_EXIT_G_PAUSE:
+		x = helper_vmread(cpu_vm_exec_ctl);
+		if (x & CPU_VM_EXEC_CTL_PAUSE) {
+			helper_vmx_vmexit(type);
+		}
+		break;
 	default:
 		helper_vmx_vmexit(type);
 		break;
