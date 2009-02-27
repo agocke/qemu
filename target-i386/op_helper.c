@@ -3120,6 +3120,7 @@ void helper_clts(void)
 void helper_invlpg(target_ulong addr)
 {
     helper_svm_check_intercept_param(SVM_EXIT_INVLPG, 0);
+    helper_vmx_check_intercept_param(VMX_EXIT_G_INVLPG,0,0);
     tlb_flush_page(env, addr);
 }
 
@@ -5773,7 +5774,12 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 			helper_vmx_vmexit(type);
 		}
 		break;
-
+	case VMX_EXIT_G_INVLPG:
+		x = helper_vmread(cpu_vm_exec_ctl);
+		if (x & CPU_VM_EXEC_CTL_INVLPG) {
+			helper_vmx_vmexit(type);
+		}
+		break;
 	default:
 		helper_vmx_vmexit(type);
 		break;
