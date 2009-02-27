@@ -3144,7 +3144,7 @@ void helper_rdpmc(void)
         raise_exception(EXCP0D_GPF);
     }
     helper_svm_check_intercept_param(SVM_EXIT_RDPMC, 0);
-
+    helper_vmx_check_intercept_param(VMX_EXIT_G_RDPMC,0,0);
     /* currently unimplemented */
     raise_exception_err(EXCP06_ILLOP, 0);
 }
@@ -5777,6 +5777,12 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 	case VMX_EXIT_G_INVLPG:
 		x = helper_vmread(cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_INVLPG) {
+			helper_vmx_vmexit(type);
+		}
+		break;
+	case VMX_EXIT_G_RDPMC:
+		x = helper_vmread(cpu_vm_exec_ctl);
+		if (x & CPU_VM_EXEC_CTL_RDPMC) {
 			helper_vmx_vmexit(type);
 		}
 		break;
