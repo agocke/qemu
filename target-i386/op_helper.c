@@ -5864,10 +5864,19 @@ void helper_vmptrld(target_ulong ptr)
 
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
-
+    else if(env->vmx.in_non_root) {
+        // TODO: figure out correct format for code
+        // helper_vmx_vmexit(something)
+    } else if(env->hflags & HF_CPL_MASK) {
+        raise_exception_err(EXCP0D_GPF,0);
+    } else if(ptr == env->cr[4] & CR4_VMXE_MASK) {
+        vm_fail(VMPTRLD_VMXON_PTR);
+    } else {
+        env->vmx.cur_vmcs = ptr;
+        vm_succeed();
+    }
     /* TODO check */
 
-    env->vmx.cur_vmcs = ptr;
 }
 
 /*
@@ -5880,8 +5889,15 @@ void helper_vmptrst(target_ulong ptr)
 
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
-
-    *((uint64_t*)ptr) = env->vmx.cur_vmcs;
+    else if(env->vmx.in_non_root) {
+        // TODO: figure out the correct format for the code
+        // helper_vmx_vmexit(something)
+    } else if(env->hflags & HF_CPL_MASK) {
+        raise_exception_err(EXCP0D_GPF,0);
+    } else {
+        stq_phys(ptr,env->vmx.cur_vmcs);
+        vm_succeed();
+    }
 }
 
 target_ulong helper_vmread(target_ulong index)
