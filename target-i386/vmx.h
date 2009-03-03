@@ -125,7 +125,17 @@ enum {
 /* Virtual MAchine Control Structure */
 enum vmcs_field {
 
-	rev_abort = 0,
+	//rev_abort = 0,
+	vpid =0,
+
+	guest_cs_sel,
+	guest_ss_sel,
+	guest_ds_sel,
+	guest_es_sel,
+	guest_fs_sel,
+	guest_gs_sel,
+	guest_ldtr_sel,
+	guest_tr_sel,
 
 	guest_cr0,
     guest_cr3,
@@ -150,15 +160,6 @@ enum vmcs_field {
     guest_ia32_sysenter_esp,
     guest_ia32_sysenter_eip,
 
-    guest_cs_sel,
-    guest_ss_sel,
-    guest_ds_sel,
-    guest_es_sel,
-    guest_fs_sel,
-    guest_gs_sel,
-    guest_ldtr_sel,
-    guest_tr_sel,
-
 
     guest_cs_limit,
     guest_ss_limit,
@@ -182,21 +183,30 @@ enum vmcs_field {
     guest_idtr_limit,
 
     guest_ia32_debugctl,
+    guest_ia32_debugctl_high,
     guest_ia32_sysenter_cs,
     guest_ia32_perf_global_ctrl,
+    guest_ia32_perf_global_ctrl_high,
     guest_ia32_pat,
+    guest_ia32_pat_high,
     guest_ia32_efer,
+    guest_ia32_efer_high,
 
     guest_smbase,
 
     guest_activity,
     guest_interruptibility,
     guest_vmcs_link,
+    guest_vmcs_link_high,
     guest_preemtion_timer,
     guest_pdpte0,
+    guest_pdpte0_high,
     guest_pdpte1,
+    guest_pdpte1_high,
     guest_pdpte2,
+    guest_pdpte2_high,
     guest_pdpte3,
+    guest_pdpte3_high,
 
 
     host_cr0,
@@ -224,21 +234,42 @@ enum vmcs_field {
 
     host_ia32_sysenter_cs,
     host_ia32_perf_global_ctrl,
+    host_ia32_perf_global_ctrl_high,
     host_ia32_pat,
+    host_ia32_pat_high,
     host_ia32_efer,
+    host_ia32_efer_high,
 
     io_bitmap_a,
+    io_bitmap_a_high,
     io_bitmap_b,
+    io_bitmap_b_high,
+    msr_bitmap,
+    msr_bitmap_high,
     vmexit_msr_store,
+    vmexit_msr_store_high,
     vmexit_msr_load,
+    vmexit_msr_load_high,
     vmentry_msr_load,
+    vmentry_msr_load_high,
     executive_vmcs,
+    executive_vmcs_high,
     tsc_offset,
+    tsc_offset_high,
+    virtual_apic,
+    virtual_apic_high,
+    apic_access,
+    apic_access_high,
+    ept_ptr,
+    ept_ptr_high,
+
+
 
     guest_physical,
+    guest_physical_high,
 
     pin_vm_exec_ctl,
-    cpu_vm_exec_ctl,
+    pri_cpu_vm_exec_ctl,
     exception_bitmap,
     page_fault_error_code_mask,
     page_fault_error_code_match,
@@ -251,6 +282,8 @@ enum vmcs_field {
     vmentry_intr_info,
     vmentry_excp_error_code,
     vmentry_instruction_len,
+    tpr_threshold,
+    sec_cpu_vm_exec_ctl,
 
     vm_instruction_error,
     exit_reason,

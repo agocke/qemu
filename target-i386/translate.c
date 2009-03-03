@@ -766,6 +766,7 @@ static void gen_check_io(DisasContext *s, int ot, target_ulong cur_eip,
         tcg_gen_trunc_tl_i32(cpu_tmp2_i32, cpu_T[0]);
         gen_helper_svm_check_io(cpu_tmp2_i32, tcg_const_i32(svm_flags),
                                 tcg_const_i32(next_eip - cur_eip));
+        //TODO: VMX IO Check.
     }
 }
 
@@ -4882,12 +4883,13 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                     gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
 
                 gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
+                qemu_log("cpu T[0] %x cpu_T[1] %x cpu_A0 %x\n", cpu_T[0], cpu_T[1], cpu_A0);
                 gen_op_ld_T0_A0(OT_QUAD + s->mem_index);
+                qemu_log("cpu T[0] %x cpu_T[1] %x cpu_A0 %x\n", cpu_T[0], cpu_T[1], cpu_A0);
                 gen_helper_vmptrld(cpu_T[0]);
             }
             break;
 
-            // why is vmptrst here and the other vm things up there?
         case 7:
             /* vmptrst */
             if ((mod == 3) || s->vm86 || !s->pe
@@ -4901,8 +4903,10 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 
             gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
 
+            qemu_log("cpu T[0] %x cpu_T[1] %x\n", cpu_T[0], cpu_T[1]);
+            gen_op_ld_T0_A0(OT_QUAD + s->mem_index);
             gen_helper_vmptrst(cpu_T[0]);
-            gen_op_st_T0_A0(OT_QUAD + s->mem_index);
+
             break;
 
         default:

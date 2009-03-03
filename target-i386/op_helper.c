@@ -108,6 +108,7 @@ static const CPU86_LDouble f15rk[7] =
 struct vmcs_field_index vmcs_field_index[vmcs_max_field_index] = {
 
     /* 16 Bit */
+	{ vpid,							0x0000 },
     { guest_es_sel,                 0x0800 },
     { guest_cs_sel,                 0x0802 },
     { guest_ss_sel,                 0x0804 },
@@ -127,32 +128,60 @@ struct vmcs_field_index vmcs_field_index[vmcs_max_field_index] = {
 
     /* 64 Bit */
     { io_bitmap_a,                  0x2000 },
+    { io_bitmap_a_high,             0x2001 },
     { io_bitmap_b,                  0x2002 },
+    { io_bitmap_b_high,             0x2003 },
+    { msr_bitmap,                   0x2004 },
+    { msr_bitmap_high,              0x2005 },
     { vmexit_msr_store,             0x2006 },
+    { vmexit_msr_store_high,        0x2007 },
     { vmexit_msr_load,              0x2008 },
+    { vmexit_msr_load_high,         0x2009 },
     { vmentry_msr_load,             0x200a },
+    { vmentry_msr_load_high,        0x200b },
     { executive_vmcs,               0x200c },
+    { executive_vmcs_high,          0x200d },
     { tsc_offset,                   0x2010 },
+    { tsc_offset_high,              0x2011 },
+    { virtual_apic,                 0x2012 },
+    { virtual_apic_high,            0x2013 },
+    { apic_access,                  0x2014 },
+    { apic_access_high,             0x2015 },
+    { ept_ptr,                      0x201a },
+    { ept_ptr_high,                 0x201b },
 
     { guest_physical,               0x2400 },
+    { guest_physical_high,          0x2401 },
 
     { guest_vmcs_link,              0x2800 },
+    { guest_vmcs_link_high,         0x2801 },
     { guest_ia32_debugctl,          0x2802 },
+    { guest_ia32_debugctl_high,     0x2803 },
     { guest_ia32_pat,               0x2804 },
+    { guest_ia32_pat_high,          0x2805 },
     { guest_ia32_efer,              0x2806 },
+    { guest_ia32_efer_high,         0x2807 },
     { guest_ia32_perf_global_ctrl,  0x2808 },
+    { guest_ia32_perf_global_ctrl_high,  0x2809 },
     { guest_pdpte0,                 0x280a },
+    { guest_pdpte0_high,            0x280b },
     { guest_pdpte1,                 0x280c },
+    { guest_pdpte1_high,            0x280d },
     { guest_pdpte2,                 0x280e },
+    { guest_pdpte2_high,            0x280f },
     { guest_pdpte3,                 0x2810 },
+    { guest_pdpte3_high,            0x2811 },
 
     { host_ia32_pat,                0x2c00 },
+    { host_ia32_pat_high,           0x2c01 },
     { host_ia32_efer,               0x2c02 },
+    { host_ia32_efer_high,          0x2c03 },
     { host_ia32_perf_global_ctrl,   0x2c04 },
+    { host_ia32_perf_global_ctrl_high,   0x2c05 },
 
     /* 32 Bit */
     { pin_vm_exec_ctl,              0x4000 },
-    { cpu_vm_exec_ctl,              0x4002 },
+    { pri_cpu_vm_exec_ctl,          0x4002 },
     { exception_bitmap,             0x4004 },
     { page_fault_error_code_mask,   0x4006 },
     { page_fault_error_code_match,  0x4008 },
@@ -165,6 +194,9 @@ struct vmcs_field_index vmcs_field_index[vmcs_max_field_index] = {
     { vmentry_intr_info,            0x4016 },
     { vmentry_excp_error_code,      0x4018 },
     { vmentry_instruction_len,      0x401a },
+    { tpr_threshold,				0x401c },
+    { sec_cpu_vm_exec_ctl,          0x401e },
+
 
     { vm_instruction_error,         0x4400 },
     { exit_reason,                  0x4402 },
@@ -3164,6 +3196,7 @@ void helper_wrmsr(void)
     uint64_t val;
 
     helper_svm_check_intercept_param(SVM_EXIT_MSR, 1);
+    //TODO: helper_vmx_check_intercept_param(VMX_EXIT_XXXX);
 
     val = ((uint32_t)EAX) | ((uint64_t)((uint32_t)EDX) << 32);
 
@@ -5770,31 +5803,31 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 		}
 		break;
 	case VMX_EXIT_G_HLT:
-		x = helper_vmread(cpu_vm_exec_ctl);
+		x = helper_vmread(pri_cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_HLT) {
 			helper_vmx_vmexit(type);
 		}
 		break;
 	case VMX_EXIT_G_INVLPG:
-		x = helper_vmread(cpu_vm_exec_ctl);
+		x = helper_vmread(pri_cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_INVLPG) {
 			helper_vmx_vmexit(type);
 		}
 		break;
 	case VMX_EXIT_G_RDPMC:
-		x = helper_vmread(cpu_vm_exec_ctl);
+		x = helper_vmread(pri_cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_RDPMC) {
 			helper_vmx_vmexit(type);
 		}
 		break;
 	case VMX_EXIT_G_RDTSC:
-		x = helper_vmread(cpu_vm_exec_ctl);
+		x = helper_vmread(pri_cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_RDTSC) {
 			helper_vmx_vmexit(type);
 		}
 		break;
 	case VMX_EXIT_G_PAUSE:
-		x = helper_vmread(cpu_vm_exec_ctl);
+		x = helper_vmread(pri_cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_PAUSE) {
 			helper_vmx_vmexit(type);
 		}
@@ -5860,7 +5893,7 @@ void helper_vmclear(target_ulong ptr)
 
 void helper_vmptrld(target_ulong ptr)
 {
-	qemu_log("vmptrld: enter ptr:%d\n", ptr);
+	qemu_log("vmptrld: enter ptr:%llx\n", ptr);
 
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
@@ -5885,7 +5918,7 @@ void helper_vmptrld(target_ulong ptr)
  */
 void helper_vmptrst(target_ulong ptr)
 {
-	qemu_log("vmptrst: enter ptr:%d\n", ptr);
+	qemu_log("vmptrst: enter ptr:%llx\n", ptr);
 
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
@@ -6020,6 +6053,7 @@ void helper_vmlaunch(uint32_t resume)
     // TODO: Check settings of VMX controls and host-state area;
 
     /* save the current state of the CPU */
+    /*
     vmcs_write(host_cr0, env->cr[0]);
     vmcs_write(host_cr3, env->cr[3]);
     vmcs_write(host_cr4, env->cr[4]);
@@ -6051,18 +6085,26 @@ void helper_vmlaunch(uint32_t resume)
     //vmcs_write(host_ia32_pat, );
 
     vmcs_write(host_ia32_efer, env->efer);
-
+*/
     // TODO: Attempt to load guest state and PDPTRs as appropriate;
     cpu_x86_update_cr0(env, vmcs_read(guest_cr0));
     cpu_x86_update_cr3(env, vmcs_read(guest_cr3));
     cpu_x86_update_cr4(env, vmcs_read(guest_cr4));
-    env->segs[R_ES].base = vmcs_read(guest_es_base);
+
     vm_load_seg(&env->segs[R_ES], guest_es_base, guest_es_sel, guest_es_limit, guest_es_access);
     vm_load_seg(&env->segs[R_CS], guest_cs_base, guest_cs_sel, guest_cs_limit, guest_cs_access);
     vm_load_seg(&env->segs[R_SS], guest_ss_base, guest_ss_sel, guest_ss_limit, guest_ss_access);
     vm_load_seg(&env->segs[R_DS], guest_ds_base, guest_ds_sel, guest_ds_limit, guest_ds_access);
     vm_load_seg(&env->segs[R_FS], guest_fs_base, guest_fs_sel, guest_fs_limit, guest_fs_access);
     vm_load_seg(&env->segs[R_GS], guest_gs_base, guest_gs_sel, guest_gs_limit, guest_gs_access);
+
+    // TODO: Done? If the “load debug controls” VM-execution control is 1,
+    if (vmcs_read(vmentry_controls) & (1<<2))
+    env->dr[7] = (vmcs_read(guest_dr7) & ~((1<<12) | (1<<14) | (1<<15))) | (1<<10);
+
+    env->sysenter_cs = vmcs_read(guest_ia32_sysenter_cs);
+    env->sysenter_esp = vmcs_read(guest_ia32_sysenter_esp);
+    env->sysenter_eip = vmcs_read(guest_ia32_sysenter_eip);
 
 
     // TODO: clear address-range monitoring;
