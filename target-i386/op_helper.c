@@ -5694,6 +5694,8 @@ static inline void vm_fail(uint32_t err)
     }
 }
 
+
+
 /* See Intel Arch manual 3b Chapter 23 for details */
 static inline void helper_vmx_vmexit(uint32_t exit_info)
 {
@@ -5776,10 +5778,90 @@ static inline void helper_vmx_vmexit(uint32_t exit_info)
 	vmcs_write(guest_idtr_base, env->idt.base);
 	vmcs_write(guest_idtr_limit, env->idt.limit);
 
+	vmcs_write(guest_rip, env->eip);
+	vmcs_write(guest_rsp, env->regs[R_ESP]);
+	vmcs_write(guest_rflags, env->eflags);
+
+	target_ulong vmexit_msr_count = vmcs_read(vmexit_msr_store_cnt);
+	target_ulong p = vmcs_read(vmexit_msr_store);
+	target_ulong i;
+	for ( i=0 ; i<vmexit_msr_count ; i++) {
+		uint32_t index = ldl(p);
+		helper_rdmsr();
+
+	}
+	//TODO: Saving Non-register State - guest_activity, guest_interruptibility
+
+
 	/* Save MSRs into VM-Exit MSR-store area */
+	// TODO: Put all MSR-s in array so that we can do this save.
+
 	/* Load processor state from host-state area */
+    cpu_x86_update_cr0(env, vmcs_read(host_cr0));
+    cpu_x86_update_cr3(env, vmcs_read(host_cr3));
+    cpu_x86_update_cr4(env, vmcs_read(host_cr4));
+
+    env->cr[0] |= CR0_PE_MASK;
+    env->cr[0] |= CR0_PG_MASK;
+    env->cr[0] |= CR0_ET_MASK;
+    env->cr[0] &= CR0_RESERVE_MASK;
+
+
+    // TODO: make a mask
+    if (vmcs_read(vmexit_controls) & VMXEXIT_CTRL_HOST_ADDR)
+    	env->cr[4] |= CR4_PAE_MASK;
+
+    env->dr[7] = 0x400;
+    env->sysenter_cs = vmcs_read(host_ia32_sysenter_cs);
+    env->sysenter_eip = vmcs_read(host_ia32_sysenter_eip);
+    env->sysenter_esp = vmcs_read(host_ia32_sysenter_esp);
+
+#ifdef TARGET_X86_64
+    env->sysenter_cs |= 0x00000000FFFFFFFFLL;
+    env->sysenter_eip |= 0x00000000FFFFFFFFLL;
+    env->sysenter_esp |= 0x00000000FFFFFFFFLL;
+#endif
+
+    // TODO: Do this only if 23.5.1 says so.
+    tlb_flush(env, 1);
+
+    cpu_x86_load_seg_cache(env, R_CS, vmcs_read(host_cs_sel), 0, 0xFFFFFFFF,
+    	((11 << DESC_TYPE_SHIFT) | (DESC_S_MASK) | (DESC_P_MASK) | (DESC_B_MASK) | (DESC_G_MASK)) & (~DESC_DPL_MASK));
+
+    cpu_x86_load_seg_cache(env, R_SS, vmcs_read(host_ss_sel), 0, 0xFFFFFFFF,
+    	((3 << DESC_TYPE_SHIFT) | (DESC_S_MASK) | (DESC_P_MASK) | (DESC_B_MASK) | (DESC_G_MASK)) & (~DESC_DPL_MASK));
+
+    cpu_x86_load_seg_cache(env, R_DS, vmcs_read(host_ds_sel), 0, 0xFFFFFFFF,
+       	((3 << DESC_TYPE_SHIFT) | (DESC_S_MASK) | (DESC_P_MASK) | (DESC_B_MASK)) | (DESC_G_MASK) & (~DESC_DPL_MASK));
+
+    cpu_x86_load_seg_cache(env, R_ES, vmcs_read(host_es_sel), 0, 0xFFFFFFFF,
+        ((3 << DESC_TYPE_SHIFT) | (DESC_S_MASK) | (DESC_P_MASK) | (DESC_B_MASK)) | (DESC_G_MASK) & (~DESC_DPL_MASK));
+
+    cpu_x86_load_seg_cache(env, R_FS, vmcs_read(host_fs_sel), 0, 0xFFFFFFFF,
+        ((3 << DESC_TYPE_SHIFT) | (DESC_S_MASK) | (DESC_P_MASK) | (DESC_B_MASK)) | (DESC_G_MASK) & (~DESC_DPL_MASK));
+
+    cpu_x86_load_seg_cache(env, R_GS, vmcs_read(host_gs_sel), 0, 0xFFFFFFFF,
+        ((3 << DESC_TYPE_SHIFT) | (DESC_S_MASK) | (DESC_P_MASK) | (DESC_B_MASK)) | (DESC_G_MASK) & (~DESC_DPL_MASK));
+
+    env->tr.selector = vmcs_read(host_tr_sel);
+    env->tr.base = vmcs_read(host_tr_base);
+    env->tr.limit = 0x67;
+    env->tr.flags = ((11 << DESC_TYPE_SHIFT) | (DESC_P_MASK)) & (~DESC_B_MASK) & (~DESC_G_MASK) & (~DESC_DPL_MASK) & (~DESC_S_MASK);
+
+
+    env->eip = vmcs_read(host_rip);
+    env->regs[R_ESP] = vmcs_read(host_rsp);
+    env->eflags = (1<<1);
+
+    env->gdt.base = vmcs_read(host_gdtr_base);
+    env->gdt.limit = 0xFFFF;
+
+    env->idt.base = vmcs_read(host_idtr_base);
+    env->idt.limit = 0xFFFF;
+
 	/* Clear address-range monitoring */
 	/* Load MSRs from VM-exit MSR-load area */
+    cpu_loop_exit();
 }
 
 
