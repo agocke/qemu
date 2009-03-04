@@ -7519,8 +7519,6 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         }
 
         gen_op_mov_TN_reg(ot, 0, reg);
-        // TODO: old code re-based below. Delete this line after some time
-        //tcg_gen_helper_0_2(helper_vmwrite, cpu_T[0], cpu_T[1]);
         gen_helper_vmwrite(cpu_T[0], cpu_T[1]);
         break;
 #endif
