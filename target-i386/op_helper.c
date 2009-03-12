@@ -5653,23 +5653,24 @@ static inline void vm_succeed(void)
 {
 	qemu_log("vmsucceed: enter\n");
 
-    env->eflags &= ~(CC_C | CC_P | CC_A | CC_Z | CC_S | CC_O );
+	load_eflags(0, ~(CC_C | CC_P | CC_A | CC_Z | CC_S | CC_O ));
+	CC_OP = CC_OP_EFLAGS;
 }
 
 static inline void vm_fail_invalid(void)
 {
 	qemu_log("vm_fail_invalid: enter\n");
 
-    env->eflags &= ~(CC_P | CC_A | CC_Z | CC_S | CC_O );
-    env->eflags |= CC_C;
+	load_eflags(0, ~(CC_P | CC_A | CC_Z | CC_S | CC_O ) | CC_C);
+	CC_OP = CC_OP_EFLAGS;
 }
 
 static inline void vm_fail_valid(uint32_t err)
 {
 	qemu_log("vm_fail_invalid: enter\n");
 
-    env->eflags &= ~(CC_C | CC_P | CC_A | CC_S | CC_O );
-    env->eflags |= CC_Z;
+	load_eflags(0, ~(CC_C | CC_P | CC_A | CC_S | CC_O) | CC_Z);
+	CC_OP = CC_OP_EFLAGS;
     vmcs_write(vm_instruction_error, err);
 }
 
@@ -6051,6 +6052,7 @@ void helper_vmwrite(target_ulong index, target_ulong value)
     //int code64 = env->hflags & HF_CS64_MASK;
 
     qemu_log("vmwrite: enter index:%d  value:%d\n", index, value);
+    qemu_log_flush();
 
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
@@ -6074,6 +6076,7 @@ void helper_vmwrite(target_ulong index, target_ulong value)
 found:
     vm_succeed();
 	vmcs_write(field, value);
+	qemu_log("Flags: %x\n", env->eflags);
 }
 
 
