@@ -26,6 +26,7 @@ interp_prefix="/usr/gnemul/qemu-%M"
 static="no"
 cross_prefix=""
 cc="gcc"
+debug="no"
 audio_drv_list=""
 audio_card_list="ac97 es1370 sb16"
 audio_possible_cards="ac97 es1370 sb16 cs4231a adlib gus"
@@ -357,6 +358,8 @@ for opt do
   ;;
   --install=*) install="$optarg"
   ;;
+  --enable-debugging) debug="yes"
+  ;;
   --extra-cflags=*) CFLAGS="$optarg"
   ;;
   --extra-ldflags=*) LDFLAGS="$optarg"
@@ -460,7 +463,11 @@ for opt do
 done
 
 # default flags for all hosts
-CFLAGS="$CFLAGS -O2 -g -fno-strict-aliasing"
+if test  "$debug" = "yes" ; then
+    CFLAGS="$CFLAGS -g -fno-strict-aliasing"
+else
+    CFLAGS="$CFLAGS -O2 -g -fno-strict-aliasing"
+fi
 CFLAGS="$CFLAGS -Wall -Wundef -Wendif-labels -Wwrite-strings -Wmissing-prototypes -Wstrict-prototypes -Wredundant-decls"
 LDFLAGS="$LDFLAGS -g"
 if test "$werror" = "yes" ; then
@@ -531,6 +538,7 @@ echo "  --cc=CC                  use C compiler CC [$cc]"
 echo "  --host-cc=CC             use C compiler CC [$host_cc] for dyngen etc."
 echo "  --make=MAKE              use specified make [$make]"
 echo "  --install=INSTALL        use specified install [$install]"
+echo "  --enable-debugging       turn on debugging and turn off optimization[$debug]"
 echo "  --static                 enable static build [$static]"
 echo "  --enable-sparse          enable sparse checker"
 echo "  --disable-sparse         disable sparse checker (default)"
