@@ -3196,7 +3196,7 @@ void helper_wrmsr(void)
     uint64_t val;
 
     helper_svm_check_intercept_param(SVM_EXIT_MSR, 1);
-    //TODO: helper_vmx_check_intercept_param(VMX_EXIT_XXXX);
+    helper_vmx_check_intercept_param(VMX_EXIT_G_WRMSR,0,0);
 
     val = ((uint32_t)EAX) | ((uint64_t)((uint32_t)EDX) << 32);
 
@@ -3311,6 +3311,7 @@ void helper_rdmsr(void)
     uint64_t val;
 
     helper_svm_check_intercept_param(SVM_EXIT_MSR, 0);
+    helper_vmx_check_intercept_param(VMX_EXIT_G_RDMSR,0,0);
 
     switch((uint32_t)ECX) {
     case MSR_IA32_SYSENTER_CS:
@@ -5915,6 +5916,37 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 			helper_vmx_vmexit(type);
 		}
 		break;
+    case VMX_EXIT_G_RDMSR:
+        x = helper_vmread(pri_cpu_vm_exec_ctl);
+        if ( !(x & CPU_VM_EXEC_CTL_USE_MSR_BMP) )
+            helper_vmx_vmexit(type);
+        else if( !( ( ECX >= 0x0  && ECX <= 0x1fff ) || 
+                    ( ECX >= 0xc0000000 && ECX <= 0xc0001fff ) ) )
+            helper_vmx_vmexit(type);
+        else if( ECX >= 0x0 && ECX <= 0x1fff && 
+                 ( (1<<ECX) & vmcs_field_index[msr_bitmap].index )) {
+            helper_vmx_vmexit(type);
+        } else if ( ECX >= 0xc0000000 && ECX <= 0xc0001fff &&
+                (1<<(ECX & 0x1fff)) & (vmcs_field_index[msr_bitmap].index+1024) ) {
+            helper_vmx_vmexit(type);
+        }
+        break;
+    case VMX_EXIT_G_WRMSR:
+        x = helper_vmread(pri_cpu_vm_exec_ctl);
+        if( !(x & CPU_VM_EXEC_CTL_USE_MSR_BMP) )
+            helper_vmx_vmexit(type);
+        else if( !( ( ECX >= 0x0 && ECX <= 0x1fff) ||
+                    (ECX >= 0xc0000000 && ECX <= 0xc0001fff ) ) ) {
+            helper_vmx_vmexit(type);
+        } else if (ECX >= 0x0 && ECX <= 0x1fff &&
+                (1<<ECX) & (vmcs_field_index[msr_bitmap].field+2048) ) {
+            helper_vmx_vmexit(type);
+        } else if( ECX >= 0xc0000000 && ECX <= 0xc0001fff &&
+                (1<<(ECX & 0x1fff)) & (vmcs_field_index[msr_bitmap].field+3072) ) {
+            helper_vmx_vmexit(type);
+        }
+        // TODO: "Trap-like VM exit?"
+        break;
 	default:
 		helper_vmx_vmexit(type);
 		break;

@@ -359,7 +359,12 @@ enum vm_fail_error {
     VMENTRY_EVENTS_BLOCKED_BY_MOV_SS
 };
 
-//TODO: Add Pin-Based VM-Execution Controls
+//Pin-Based VM-Execution Controls
+#define PIN_VM_EXEC_CTL_EXT_INT_EXIT 		1
+#define PIN_VM_EXEC_CTL_NMI_EXIT 			(1<<3)
+#define PIN_VM_EXEC_CTL_VIRT_NMI			(1<<5)
+#define PIN_VM_EXEC_CTL_ACTIV_VMX_PRE_TIMER	(1<<6)
+
 
 //Primary Processor-Based VM-Execution Controls
 #define CPU_VM_EXEC_CTL_HLT			(1<<7)
@@ -378,7 +383,14 @@ enum vm_fail_error {
 #define CPU_VM_EXEC_CTL_MONITOR		(1<<29)
 #define CPU_VM_EXEC_CTL_PAUSE		(1<<30)
 
-//TODO: Add Secondary Processor-Based VM-Execution Controls
+//Secondary Processor-Based VM-Execution Controls
+#define SEC_CPU_VM_EXEC_CTL_VIRT_APIC	1
+#define SEC_CPU_VM_EXEC_CTL_EPT			(1<<1)
+#define SEC_CPU_VM_EXEC_CTL_DT_EXIT		(1<<2)
+#define SEC_CPU_VM_EXEC_CTL_RDTSCP		(1<<3)
+#define SEC_CPU_VM_EXEC_CTL_VIRT_X2APIC	(1<<4)
+#define SEC_CPU_VM_EXEC_CTL_VPID		(1<<5)
+#define SEC_CPU_VM_EXEC_CTL_WBINVD_EXIT	(1<<6)
 
 
 /*
