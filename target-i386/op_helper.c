@@ -5702,6 +5702,8 @@ static inline void vm_fail(uint32_t err)
 static inline void helper_vmx_vmexit(uint32_t exit_info)
 {
 
+	qemu_log("VMExit begins, reason: %d\n", exit_info);
+
 	/* Save processor state into guest-state area */
 	vmcs_write(guest_cr0, env->cr[0]);
 	vmcs_write(guest_cr3, env->cr[3]);
@@ -5920,10 +5922,10 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
         x = helper_vmread(pri_cpu_vm_exec_ctl);
         if ( !(x & CPU_VM_EXEC_CTL_USE_MSR_BMP) )
             helper_vmx_vmexit(type);
-        else if( !( ( ECX >= 0x0  && ECX <= 0x1fff ) || 
+        else if( !( ( ECX >= 0x0  && ECX <= 0x1fff ) ||
                     ( ECX >= 0xc0000000 && ECX <= 0xc0001fff ) ) )
             helper_vmx_vmexit(type);
-        else if( ECX >= 0x0 && ECX <= 0x1fff && 
+        else if( ECX >= 0x0 && ECX <= 0x1fff &&
                  ( (1<<ECX) & vmcs_field_index[msr_bitmap].index )) {
             helper_vmx_vmexit(type);
         } else if ( ECX >= 0xc0000000 && ECX <= 0xc0001fff &&
@@ -6169,40 +6171,13 @@ void helper_vmlaunch(uint32_t resume)
 
     // TODO: Check settings of VMX controls and host-state area;
 
-    /* save the current state of the CPU */
-    /*
-    vmcs_write(host_cr0, env->cr[0]);
-    vmcs_write(host_cr3, env->cr[3]);
-    vmcs_write(host_cr4, env->cr[4]);
-    vmcs_write(host_fs_base, env->segs[R_FS].base);
-    vmcs_write(host_gs_base, env->segs[R_GS].base);
-    vmcs_write(host_tr_base, env->tr.base);
-    vmcs_write(host_gdtr_base, env->gdt.base);
-    vmcs_write(host_idtr_base, env->idt.base);
 
-    vmcs_write(host_ia32_sysenter_esp, ESP);
-    vmcs_write(host_ia32_sysenter_eip, EIP);
-#ifdef TARGET_X86_64
-    // TODO: figure this out
-    //vmcs_write(host_rsp, R_ESP);
-    //vmcs_write(host_rip, R_EIP);
-#endif
+    env->gdt.base = vmcs_read(guest_gdtr_base);
+    env->gdt.limit = 0xFFFF;
 
-    vmcs_write(host_cs_sel, env->segs[R_CS].selector);
-    vmcs_write(host_ss_sel, env->segs[R_SS].selector);
-    vmcs_write(host_ds_sel, env->segs[R_DS].selector);
-    vmcs_write(host_es_sel, env->segs[R_ES].selector);
-    vmcs_write(host_fs_sel, env->segs[R_FS].selector);
-    vmcs_write(host_gs_sel, env->segs[R_GS].selector);
-    vmcs_write(host_tr_sel, env->tr.selector);
+    env->idt.base = vmcs_read(guest_idtr_base);
+    env->idt.limit = 0xFFFF;
 
-    vmcs_write(host_ia32_sysenter_cs, env->sysenter_cs);
-    // TODO: figure out this two
-    //vmcs_write(host_ia32_perf_global_ctrl, );
-    //vmcs_write(host_ia32_pat, );
-
-    vmcs_write(host_ia32_efer, env->efer);
-*/
     // TODO: Attempt to load guest state and PDPTRs as appropriate;
     cpu_x86_update_cr0(env, vmcs_read(guest_cr0));
     cpu_x86_update_cr3(env, vmcs_read(guest_cr3));
@@ -6223,15 +6198,30 @@ void helper_vmlaunch(uint32_t resume)
     env->sysenter_esp = vmcs_read(guest_ia32_sysenter_esp);
     env->sysenter_eip = vmcs_read(guest_ia32_sysenter_eip);
 
+    EIP = vmcs_read(guest_rip);
+    env->eip = EIP;
+
+    ESP = vmcs_read(guest_rsp);
+    env->eflags = 0;
+    load_eflags(vmcs_read(guest_rflags),
+				~(CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C | DF_MASK));
+    CC_OP = CC_OP_EFLAGS;
 
     // TODO: clear address-range monitoring;
 
     // TODO: Attempt to load MSRs from VM-entry MSR-load area;
 
+    // TODO: Inject interupt
+
+
+
     vmcs_write(launch_state, VMX_LS_LAUNCHED);
 
     env->vmx.in_non_root = 1;
     vm_succeed();
+
+    qemu_log("Launch end\n");
+    cpu_loop_exit();
 }
 
 
