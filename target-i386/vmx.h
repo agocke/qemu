@@ -388,6 +388,7 @@ enum vm_fail_error {
 #define CPU_VM_EXEC_CTL_NMI_WINDOW	(1<<22)
 #define CPU_VM_EXEC_CTL_MOV_DR		(1<<23)
 #define CPU_VM_EXEC_CTL_UNCON_IO	(1<<24)
+#define CPU_VM_EXEC_CTL_USE_IO_BMP  (1<<25)
 #define CPU_VM_EXEC_CTL_USE_MSR_BMP	(1<<28)
 #define CPU_VM_EXEC_CTL_MONITOR		(1<<29)
 #define CPU_VM_EXEC_CTL_PAUSE		(1<<30)

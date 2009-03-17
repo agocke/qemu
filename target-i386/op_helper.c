@@ -5630,6 +5630,11 @@ void helper_vmlaunch(uint32_t resume)
 	// Dummy function
 }
 
+void helper_vmx_check_io(uint32_t port) 
+{
+    // Dummy function
+}
+
 void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t inter_type)
 {
 }
@@ -5954,6 +5959,23 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 		break;
 	}
 }
+
+void helper_vmx_check_io(uint64_t port)
+{
+    if( !(pri_cpu_vm_exec_ctl & CPU_VM_EXEC_CTL_USE_MSR_BMP) &&
+            (pri_cpu_vm_exec_ctl & CPU_VM_EXEC_CTL_UNCON_IO) )
+    {
+        helper_vmx_vmexit(VMX_EXIT_G_IO);
+    } else if(pri_cpu_vm_exec_ctl) {
+        uint64_t addr = port < 0x8000 ? vmcs_field_index[io_bitmap_a].field :
+            vmcs_field_index[io_bitmap_b].field;
+        if( lduw_phys(addr+port/8) & (1 << (port%8) ) )
+        {
+            helper_vmx_vmexit(VMX_EXIT_G_IO);
+        }
+    }
+}
+        
 
 void helper_vmxon(void)
 {
