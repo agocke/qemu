@@ -1492,6 +1492,8 @@ static int check_exception(int intno, int *error_code)
 static void noreturn raise_interrupt(int intno, int is_int, int error_code,
                                      int next_eip_addend)
 {
+	qemu_log("raise interrupt enter: intno:%x, is_int: %d, error_code:%d, next_eip_addend:%d\n", intno, is_int, error_code, next_eip_addend);
+
     if (!is_int) {
         helper_svm_check_intercept_param(SVM_EXIT_EXCP_BASE + intno, error_code);
         if (intno < 32)
@@ -1503,7 +1505,6 @@ static void noreturn raise_interrupt(int intno, int is_int, int error_code,
     } else {
         helper_svm_check_intercept_param(SVM_EXIT_SWINT, 0);
         helper_vmx_check_intercept_param(VMX_EXIT_EXCEP_OR_NMI_INT, intno, VMX_INTERRUPT_SOFTWARE_EXCEPTION);
-        // TODO: helper_svm_check_intercept_param()
     }
 
     env->exception_index = intno;
@@ -5877,6 +5878,8 @@ static inline void helper_vmx_vmexit(uint32_t exit_info)
 void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t inter_type) {
 	uint32_t x, y;
 
+	qemu_log("vmx_check_intercept_param enter: type:%d, param:%d, inter_type:%d\n", type, param, inter_type);
+
 	if (!(env->vmx.enabled && env->vmx.in_non_root))
 		return;
 	//TODO
@@ -5887,6 +5890,7 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 	switch (type) {
 	case VMX_EXIT_EXCEP_OR_NMI_INT:
 		x = helper_vmread(exception_bitmap);
+		qemu_log("x=%x %d \n",x , x & (1 << param));
 		if (x & (1 << param)) {
 			y = (1<<31) | (inter_type << 8) | param;
 			helper_vmwrite(vmexit_intr_info, y);
@@ -6075,6 +6079,7 @@ void helper_vmptrst(target_ulong ptr)
 target_ulong helper_vmread(target_ulong index)
 {
     int i, field;
+    target_ulong x;
 
     qemu_log("vmread: enter %d\n", index);
 
@@ -6098,7 +6103,9 @@ target_ulong helper_vmread(target_ulong index)
 
 found:
     vm_succeed();
-    return vmcs_read(field);
+    x = vmcs_read(field);
+    qemu_log("vmread: returning %d\n", x);
+    return x;
 }
 
 void helper_vmwrite(target_ulong index, target_ulong value)
@@ -6132,7 +6139,7 @@ void helper_vmwrite(target_ulong index, target_ulong value)
 found:
     vm_succeed();
 	vmcs_write(field, value);
-	qemu_log("Flags: %x\n", env->eflags);
+	qemu_log("Flags: %x %d\n", env->eflags, vmcs_read(field));
 }
 
 

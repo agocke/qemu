@@ -766,7 +766,7 @@ static void gen_check_io(DisasContext *s, int ot, target_ulong cur_eip,
         tcg_gen_trunc_tl_i32(cpu_tmp2_i32, cpu_T[0]);
         gen_helper_svm_check_io(cpu_tmp2_i32, tcg_const_i32(svm_flags),
                                 tcg_const_i32(next_eip - cur_eip));
-        //TODO: VMX IO Check.
+        gen_helper_vmx_check_io(cpu_tmp2_i32);
     }
 }
 
@@ -7489,15 +7489,17 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         if (s->cpl > 0)
             gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
 
-        gen_op_mov_reg_T0(OT_LONG, reg);
+
+        gen_op_mov_TN_reg(ot, 0, reg);
+
         gen_helper_vmread(cpu_T[0], cpu_T[0]);
 
         if (mod != 3) {
-            gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
-            gen_op_st_T0_A0(ot + s->mem_index);
+        	gen_ldst_modrm(s, modrm, ot, OR_TMP0, 1);
         } else {
             gen_op_mov_reg_T0(ot, rm);
         }
+
         break;
     case 0x179: /* vmwrite */
         modrm = ldub_code(s->pc++);
