@@ -210,6 +210,7 @@ DEF_HELPER_1(vmread, tl, tl)
 
 DEF_HELPER_1(vmlaunch, void, i32)
 DEF_HELPER_3(vmx_check_intercept_param, void, i32, i64, i32)
+DEF_HELPER_1(vmx_check_io,void,i32)
 
 /* VMX END */
 
