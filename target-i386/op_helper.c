@@ -1495,14 +1495,14 @@ static void noreturn raise_interrupt(int intno, int is_int, int error_code,
     if (!is_int) {
         helper_svm_check_intercept_param(SVM_EXIT_EXCP_BASE + intno, error_code);
         if (intno < 32)
-        	helper_vmx_check_intercept_param(VMX_EXIT_EXCEP_OR_NMI_INT, intno, VMX_EXIT_INTERRUPTION_TYPE_HARDWARE);
+        	helper_vmx_check_intercept_param(VMX_EXIT_EXCEP_OR_NMI_INT, intno, VMX_INTERRUPT_HARDWARE_EXCEPTION);
         else
-        	helper_vmx_check_intercept_param(VMX_EXIT_EXCEP_OR_NMI_INT, intno, VMX_EXIT_INTERRUPTION_TYPE_EXTERNAL);
+        	helper_vmx_check_intercept_param(VMX_EXIT_EXCEP_OR_NMI_INT, intno, VMX_INTERRUPT_EXTERNAL);
 
         intno = check_exception(intno, &error_code);
     } else {
         helper_svm_check_intercept_param(SVM_EXIT_SWINT, 0);
-        helper_vmx_check_intercept_param(VMX_EXIT_EXCEP_OR_NMI_INT, intno, VMX_EXIT_INTERRUPTION_TYPE_SOFTWARE);
+        helper_vmx_check_intercept_param(VMX_EXIT_EXCEP_OR_NMI_INT, intno, VMX_INTERRUPT_SOFTWARE_EXCEPTION);
         // TODO: helper_svm_check_intercept_param()
     }
 
@@ -6126,6 +6126,7 @@ static inline void vm_load_seg(SegmentCache *seg, target_ulong base,
 void helper_vmlaunch(uint32_t resume)
 {
     int ls;
+    uint32_t intr_info;
 
     qemu_log("vmlaunch: enter resume:%d\n", resume);
     /* Basic VM-Entry Checks */
@@ -6212,6 +6213,54 @@ void helper_vmlaunch(uint32_t resume)
     // TODO: Attempt to load MSRs from VM-entry MSR-load area;
 
     // TODO: Inject interupt
+	intr_info = vmcs_read(vmentry_intr_info);
+    if (intr_info & VMX_INTERRUPTION_VALID) {
+        uint8_t vector = intr_info & VMX_INTERRUPTION_VECTOR;
+        uint8_t type = VMX_INTERRUPTION_TYPE_SHIFT >> (intr_info & VMX_INTERRUPTION_TYPE);
+        uint32_t error = vmcs_read(vmentry_excp_error_code);
+        uint32_t length = vmcs_read(vmentry_instruction_len);
+		/* clear the interrupt flag */
+		vmcs_write(vmentry_intr_info, intr_info & ~VMX_INTERRUPTION_VALID);
+
+        qemu_log_mask(CPU_LOG_TB_IN_ASM, "Injecting(%#hx): ", error);
+		//TODO: Stolen from SVM, probably not exactly correct
+        switch (type) {
+        case VMX_INTERRUPT_EXTERNAL:
+                env->exception_index = vector;
+                env->error_code = error;
+                env->exception_is_int = 0;
+                env->exception_next_eip = -1;
+                qemu_log_mask(CPU_LOG_TB_IN_ASM, "INTR");
+                /* XXX: is it always correct ? */
+                do_interrupt(vector, 0, 0, 0, 1);
+                break;
+        case VMX_INTERRUPT_NMI:
+                env->exception_index = EXCP02_NMI;
+                env->error_code = error;
+                env->exception_is_int = 0;
+                env->exception_next_eip = EIP;
+                qemu_log_mask(CPU_LOG_TB_IN_ASM, "NMI");
+                cpu_loop_exit();
+                break;
+        case VMX_INTERRUPT_HARDWARE_EXCEPTION:
+                env->exception_index = vector;
+                env->error_code = error;
+                env->exception_is_int = 0;
+                env->exception_next_eip = -1;
+                qemu_log_mask(CPU_LOG_TB_IN_ASM, "EXEPT");
+                cpu_loop_exit();
+                break;
+        case VMX_INTERRUPT_SOFTWARE_EXCEPTION:
+                env->exception_index = vector;
+                env->error_code = error;
+                env->exception_is_int = 1;
+                env->exception_next_eip = EIP;
+                qemu_log_mask(CPU_LOG_TB_IN_ASM, "SOFT");
+                cpu_loop_exit();
+                break;
+        }
+        qemu_log_mask(CPU_LOG_TB_IN_ASM, " %#x %#x\n", env->exception_index, env->error_code);
+    }
 
 
 
