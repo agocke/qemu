@@ -5964,7 +5964,7 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 	}
 }
 
-void helper_vmx_check_io(uint64_t port)
+void helper_vmx_check_io(uint32_t port)
 {
     if( !(pri_cpu_vm_exec_ctl & CPU_VM_EXEC_CTL_USE_MSR_BMP) &&
             (pri_cpu_vm_exec_ctl & CPU_VM_EXEC_CTL_UNCON_IO) )
