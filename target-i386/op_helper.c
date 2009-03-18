@@ -5631,7 +5631,7 @@ void helper_vmlaunch(uint32_t resume)
 	// Dummy function
 }
 
-void helper_vmx_check_io(uint32_t port) 
+void helper_vmx_check_io(uint32_t port)
 {
     // Dummy function
 }
@@ -5979,7 +5979,7 @@ void helper_vmx_check_io(uint32_t port)
         }
     }
 }
-        
+
 
 void helper_vmxon(void)
 {
@@ -6041,8 +6041,7 @@ void helper_vmptrld(target_ulong ptr)
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
     else if(env->vmx.in_non_root) {
-        // TODO: figure out correct format for code
-        // helper_vmx_vmexit(something)
+        helper_vmx_vmexit(VMX_EXIT_G_VMPTRLD);
     } else if(env->hflags & HF_CPL_MASK) {
         raise_exception_err(EXCP0D_GPF,0);
     } else if(ptr == env->cr[4] & CR4_VMXE_MASK) {
@@ -6051,8 +6050,6 @@ void helper_vmptrld(target_ulong ptr)
         env->vmx.cur_vmcs = ptr;
         vm_succeed();
     }
-    /* TODO check */
-
 }
 
 /*
@@ -6066,8 +6063,7 @@ void helper_vmptrst(target_ulong ptr)
     if (!env->vmx.enabled)
         raise_exception_err(EXCP06_ILLOP, 0);
     else if(env->vmx.in_non_root) {
-        // TODO: figure out the correct format for the code
-        // helper_vmx_vmexit(something)
+        helper_vmx_vmexit(VMX_EXIT_G_VMPTRST);
     } else if(env->hflags & HF_CPL_MASK) {
         raise_exception_err(EXCP0D_GPF,0);
     } else {

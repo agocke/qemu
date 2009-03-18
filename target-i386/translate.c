@@ -4883,9 +4883,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                     gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
 
                 gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
-                qemu_log("cpu T[0] %x cpu_T[1] %x cpu_A0 %x\n", cpu_T[0], cpu_T[1], cpu_A0);
                 gen_op_ld_T0_A0(OT_QUAD + s->mem_index);
-                qemu_log("cpu T[0] %x cpu_T[1] %x cpu_A0 %x\n", cpu_T[0], cpu_T[1], cpu_A0);
                 gen_helper_vmptrld(cpu_T[0]);
             }
             break;
