@@ -766,8 +766,11 @@ static void gen_check_io(DisasContext *s, int ot, target_ulong cur_eip,
         tcg_gen_trunc_tl_i32(cpu_tmp2_i32, cpu_T[0]);
         gen_helper_svm_check_io(cpu_tmp2_i32, tcg_const_i32(svm_flags),
                                 tcg_const_i32(next_eip - cur_eip));
-        gen_helper_vmx_check_io(cpu_tmp2_i32);
+
     }
+
+    tcg_gen_trunc_tl_i32(cpu_tmp2_i32, cpu_T[0]);
+    gen_helper_vmx_check_io(cpu_tmp2_i32);
 }
 
 static inline void gen_movs(DisasContext *s, int ot)

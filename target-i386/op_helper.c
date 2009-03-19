@@ -5966,11 +5966,18 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 
 void helper_vmx_check_io(uint32_t port)
 {
-    if( !(pri_cpu_vm_exec_ctl & CPU_VM_EXEC_CTL_USE_MSR_BMP) &&
-            (pri_cpu_vm_exec_ctl & CPU_VM_EXEC_CTL_UNCON_IO) )
+
+	if (!(env->vmx.enabled && env->vmx.in_non_root))
+		return;
+
+	uint32_t x;
+	qemu_log("vmx_check_io enter: port:%d\n", port);
+	x = helper_vmread(pri_cpu_vm_exec_ctl);
+	if( (!(x & CPU_VM_EXEC_CTL_USE_IO_BMP)) &&
+            (x & CPU_VM_EXEC_CTL_UNCON_IO) )
     {
         helper_vmx_vmexit(VMX_EXIT_G_IO);
-    } else if(pri_cpu_vm_exec_ctl) {
+    } else if(x & CPU_VM_EXEC_CTL_USE_IO_BMP) {
         uint64_t addr = port < 0x8000 ? vmcs_field_index[io_bitmap_a].field :
             vmcs_field_index[io_bitmap_b].field;
         if( lduw_phys(addr+port/8) & (1 << (port%8) ) )
