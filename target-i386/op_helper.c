@@ -5578,6 +5578,7 @@ void helper_vmexit(uint32_t exit_code, uint64_t exit_info_1)
     env->error_code = 0;
     env->old_exception = -1;
 
+    qemu_log("vmexit complete\n");
     cpu_loop_exit();
 }
 
@@ -5833,7 +5834,7 @@ static inline void helper_vmx_vmexit(uint32_t exit_info)
 #endif
 
     // TODO: Do this only if 23.5.1 says so.
-    tlb_flush(env, 1);
+    //tlb_flush(env, 1);
 
     cpu_x86_load_seg_cache(env, R_CS, vmcs_read(host_cs_sel), 0, 0xFFFFFFFF,
     	((11 << DESC_TYPE_SHIFT) | (DESC_S_MASK) | (DESC_P_MASK) | (DESC_B_MASK) | (DESC_G_MASK)) & (~DESC_DPL_MASK));
@@ -5869,6 +5870,8 @@ static inline void helper_vmx_vmexit(uint32_t exit_info)
     env->idt.base = vmcs_read(host_idtr_base);
     env->idt.limit = 0xFFFF;
 
+    //env->vmx.in_non_root = 0;
+
 	/* Clear address-range monitoring */
 	/* Load MSRs from VM-exit MSR-load area */
     cpu_loop_exit();
@@ -5889,7 +5892,7 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 
 	switch (type) {
 	case VMX_EXIT_EXCEP_OR_NMI_INT:
-		x = helper_vmread(exception_bitmap);
+		x = vmcs_read(exception_bitmap);
 		qemu_log("x=%x %d \n",x , x & (1 << param));
 		if (x & (1 << param)) {
 			y = (1<<31) | (inter_type << 8) | param;
@@ -5898,31 +5901,31 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
 		}
 		break;
 	case VMX_EXIT_G_HLT:
-		x = helper_vmread(pri_cpu_vm_exec_ctl);
+		x = vmcs_read(pri_cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_HLT) {
 			helper_vmx_vmexit(type);
 		}
 		break;
 	case VMX_EXIT_G_INVLPG:
-		x = helper_vmread(pri_cpu_vm_exec_ctl);
+		x = vmcs_read(pri_cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_INVLPG) {
 			helper_vmx_vmexit(type);
 		}
 		break;
 	case VMX_EXIT_G_RDPMC:
-		x = helper_vmread(pri_cpu_vm_exec_ctl);
+		x = vmcs_read(pri_cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_RDPMC) {
 			helper_vmx_vmexit(type);
 		}
 		break;
 	case VMX_EXIT_G_RDTSC:
-		x = helper_vmread(pri_cpu_vm_exec_ctl);
+		x = vmcs_read(pri_cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_RDTSC) {
 			helper_vmx_vmexit(type);
 		}
 		break;
 	case VMX_EXIT_G_PAUSE:
-		x = helper_vmread(pri_cpu_vm_exec_ctl);
+		x = vmcs_read(pri_cpu_vm_exec_ctl);
 		if (x & CPU_VM_EXEC_CTL_PAUSE) {
 			helper_vmx_vmexit(type);
 		}
@@ -5943,7 +5946,7 @@ void helper_vmx_check_intercept_param(uint32_t type, uint64_t param, uint32_t in
         }
         break;
     case VMX_EXIT_G_WRMSR:
-        x = helper_vmread(pri_cpu_vm_exec_ctl);
+        x = vmcs_read(pri_cpu_vm_exec_ctl);
         if( !(x & CPU_VM_EXEC_CTL_USE_MSR_BMP) )
             helper_vmx_vmexit(type);
         else if( !( ( ECX >= 0x0 && ECX <= 0x1fff) ||
@@ -5972,19 +5975,21 @@ void helper_vmx_check_io(uint32_t port)
 
 	uint32_t x;
 	qemu_log("vmx_check_io enter: port:%d\n", port);
-	x = helper_vmread(pri_cpu_vm_exec_ctl);
+	x = vmcs_read(pri_cpu_vm_exec_ctl);
+        qemu_log("pri_cpu_vm_exec_ctl: %x\n",x);
+
 	if( (!(x & CPU_VM_EXEC_CTL_USE_IO_BMP)) &&
             (x & CPU_VM_EXEC_CTL_UNCON_IO) )
-    {
-        helper_vmx_vmexit(VMX_EXIT_G_IO);
-    } else if(x & CPU_VM_EXEC_CTL_USE_IO_BMP) {
-        uint64_t addr = port < 0x8000 ? vmcs_field_index[io_bitmap_a].field :
-            vmcs_field_index[io_bitmap_b].field;
-        if( lduw_phys(addr+port/8) & (1 << (port%8) ) )
         {
             helper_vmx_vmexit(VMX_EXIT_G_IO);
+        } else if(x & CPU_VM_EXEC_CTL_USE_IO_BMP) {
+            uint64_t addr = port < 0x8000 ? vmcs_field_index[io_bitmap_a].field :
+                vmcs_field_index[io_bitmap_b].field;
+            if( lduw_phys(addr+port/8) & (1 << (port%8) ) )
+            {
+                helper_vmx_vmexit(VMX_EXIT_G_IO);
+            }
         }
-    }
 }
 
 
@@ -6233,6 +6238,8 @@ void helper_vmlaunch(uint32_t resume)
 
     EIP = vmcs_read(guest_rip);
     env->eip = EIP;
+
+    qemu_log("Launching Guest at EIP=%x\n", env->eip);
 
     ESP = vmcs_read(guest_rsp);
     env->eflags = 0;
