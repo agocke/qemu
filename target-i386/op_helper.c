@@ -3333,7 +3333,7 @@ void helper_rdmsr(void)
     	break;
     case MSR_IA32_VMX_BASIC:
     	val = IA32_VMX_BASIC_MSR;
-#ifdef TARGET_I386
+#ifndef TARGET_X86_64
         val |= (uint64_t)(1LL << 48);
 #endif
         break;
